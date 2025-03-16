@@ -1,0 +1,40 @@
+.bg {
+    animation: slide 3s ease-in-out infinite alternate;
+    background-image: linear-gradient(-60deg, #6E62E5 50%, #4318FF 50%);
+    bottom: 0;
+    left: -50%;
+    opacity: .5;
+    position: fixed;
+    right: -50%;
+    top: 0;
+    z-index: 0;
+  }
+  
+  .bg2 {
+    animation-direction: alternate-reverse;
+    animation-duration: 4s;
+  }
+  
+  .bg3 {
+    animation-duration: 5s;
+  }
+  
+  .content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 100vh;
+  }
+  
+  h1 {
+    font-family: monospace;
+  }
+  
+  @keyframes slide {
+    0% {
+      transform: translateX(-25%);
+    }
+    100% {
+      transform: translateX(25%);
+    }
+  } 

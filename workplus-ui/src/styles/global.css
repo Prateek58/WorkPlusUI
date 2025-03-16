@@ -1,0 +1,20 @@
+/* Remove focus outline while maintaining accessibility */
+*:focus-visible {
+  outline: none !important;
+}
+
+/* Ensure buttons and interactive elements still show focus state for accessibility */
+button:focus-visible,
+[role="button"]:focus-visible {
+  box-shadow: none !important;
+}
+
+/* Maintain accessibility for keyboard navigation */
+*:focus {
+  outline: none;
+}
+
+/* Remove focus outline for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+} 
