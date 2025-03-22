@@ -31,8 +31,8 @@ const Login = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [credentials, setCredentials] = useState({
-    username: '',
-    password: '',
+    username: 'admintest',
+    password: 'Admin123',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

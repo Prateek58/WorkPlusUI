@@ -1,44 +1,68 @@
-import { createContext, useContext, useMemo, useState, ReactNode } from 'react';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { getTheme } from './theme';
 
-interface ThemeContextType {
-  toggleColorMode: () => void;
+type ThemeContextType = {
   mode: 'light' | 'dark';
-}
+  toggleColorMode: () => void;
+};
 
-export const ThemeContext = createContext<ThemeContextType>({
+const ThemeContext = createContext<ThemeContextType>({
+  mode: 'dark',
   toggleColorMode: () => {},
-  mode: 'light',
 });
 
 export const useThemeContext = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useThemeContext must be used within a ThemeProvider');
+    throw new Error('useThemeContext must be used within a ThemeContextProvider');
   }
   return context;
 };
 
-interface Props {
-  children: ReactNode;
-}
-
-export const ThemeProvider = ({ children }: Props) => {
+export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<'light' | 'dark'>('dark');
 
   const colorMode = useMemo(
     () => ({
+      mode,
       toggleColorMode: () => {
         setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
       },
-      mode,
     }),
     [mode]
   );
 
-  const theme = useMemo(() => getTheme(mode), [mode]);
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+          ...(mode === 'dark'
+            ? {
+                primary: {
+                  main: '#90caf9',
+                },
+                secondary: {
+                  main: '#f48fb1',
+                },
+                background: {
+                  default: '#0a1929',
+                  paper: '#001e3c',
+                },
+              }
+            : {
+                primary: {
+                  main: '#1976d2',
+                },
+                secondary: {
+                  main: '#dc004e',
+                },
+              }),
+        },
+      }),
+    [mode]
+  );
 
   return (
     <ThemeContext.Provider value={colorMode}>

@@ -112,18 +112,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const menuItems = [
-    { text: 'Dashboards', icon: <DashboardIcon />, count: 5 },
-    { text: 'CRM', icon: <AnalyticsIcon /> },
-    { text: 'eCommerce', icon: <ShoppingCartIcon /> },
-    { text: 'Academy', icon: <SchoolIcon /> },
-    { text: 'Logistics', icon: <LogisticsIcon /> },
+    { text: 'Dashboards', icon: <DashboardIcon />, count: 5, path: '/dashboard' },
+    { text: 'CRM', icon: <AnalyticsIcon />, path: '/crm' },
+    { text: 'eCommerce', icon: <ShoppingCartIcon />, path: '/ecommerce' },
+    { text: 'Academy', icon: <SchoolIcon />, path: '/academy' },
+    { text: 'Logistics', icon: <LogisticsIcon />, path: '/logistics' },
     { 
       text: 'Legacy Reports', 
       icon: <DescriptionIcon />,
       id: 'legacy-reports',
       subItems: [
-        { text: 'Lorry Receipt', icon: <TruckIcon /> },
-        { text: 'Job Works', icon: <JobWorkIcon /> },
+        { text: 'Lorry Receipt', icon: <TruckIcon />, path: '/lorry-receipt' },
+        { text: 'Job Works', icon: <JobWorkIcon />, path: '/job-work' },
       ]
     },
   ];
@@ -173,7 +173,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <Box key={item.text}>
             <ListItem
               component="div"
-              onClick={() => item.subItems && handleSubMenuClick(item.id)}
+              onClick={() => {
+                if (item.subItems) {
+                  handleSubMenuClick(item.id);
+                } else if (item.path) {
+                  handleNavigate(item.path);
+                }
+              }}
               sx={{
                 borderRadius: 2,
                 mb: item.subItems ? 0 : 1,
@@ -227,6 +233,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     <ListItem
                       key={subItem.text}
                       component="div"
+                      onClick={() => subItem.path && handleNavigate(subItem.path)}
                       sx={{
                         pl: 4,
                         borderRadius: 2,
