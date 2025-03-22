@@ -22,6 +22,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Autocomplete,
+  Alert,
+  Pagination,
+  TableSortLabel,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -31,6 +34,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import DashboardLayout from '../components/DashboardLayout';
+import jobWorkService from '../services/jobWorkService';
 
 // Configure axios defaults
 axios.defaults.baseURL = 'https://localhost:7160';
@@ -101,24 +105,59 @@ interface Employee {
   employeeId: string;
 }
 
+interface PaginationState {
+  page: number;
+  pageSize: number;
+  total: number;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+}
+
+interface FilterState {
+  startDate: dayjs.Dayjs | null;
+  endDate: dayjs.Dayjs | null;
+  jobId: string;
+  jobWorkTypeId: string;
+  unitId: string;
+  employeeId: string;
+  jobType: string;
+}
+
+interface SummaryState {
+  totalJobWorks: number;
+  totalJobGroups: number;
+  totalEmployees: number;
+  totalUnits: number;
+  totalHours: number;
+  totalQuantity: number;
+  totalAmount: number;
+  totalRecords: number;
+}
+
 const JobWork = () => {
-  const [filter, setFilter] = useState<JobWorkFilter>({
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [jobWorks, setJobWorks] = useState<any[]>([]);
+  const [summary, setSummary] = useState<SummaryState | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
     startDate: null,
     endDate: null,
     jobId: '',
     jobWorkTypeId: '',
     unitId: '',
     employeeId: '',
-    jobType: 'work',
+    jobType: '',
   });
-
-  const [jobWorks, setJobWorks] = useState<JobWork[]>([]);
-  const [summary, setSummary] = useState<JobWorkSummary | null>(null);
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
   const [units, setUnits] = useState<Unit[]>([]);
   const [jobWorkTypes, setJobWorkTypes] = useState<JobWorkType[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeeInputValue, setEmployeeInputValue] = useState('');
 
@@ -139,7 +178,7 @@ const JobWork = () => {
       const [unitsRes, typesRes, jobsRes] = await Promise.all([
         axios.get('/api/JobWork/units'),
         axios.get('/api/JobWork/job-work-types'),
-        axios.get(`/api/JobWork/jobs?isGroup=${filter.jobType === 'group'}`),
+        axios.get(`/api/JobWork/jobs?isGroup=${filters.jobType === 'group'}`),
       ]);
 
       console.log('API Responses:', { units: unitsRes.data, types: typesRes.data, jobs: jobsRes.data });
@@ -163,11 +202,14 @@ const JobWork = () => {
   };
 
   const handleFilterChange = (field: keyof JobWorkFilter, value: any) => {
-    setFilter(prev => ({ ...prev, [field]: value }));
+    // Reset pagination when any filter changes
+    setPagination(prev => ({ ...prev, page: 1 }));
+    
+    setFilters(prev => ({ ...prev, [field]: value }));
     
     // If jobType changes, reset jobId and fetch new jobs
     if (field === 'jobType') {
-      setFilter(prev => ({ ...prev, jobId: '' }));
+      setFilters(prev => ({ ...prev, jobId: '' }));
       fetchJobs(value);
     }
   };
@@ -182,32 +224,38 @@ const JobWork = () => {
   };
 
   const handleSearch = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const params = {
-        ...filter,
-        startDate: filter.startDate?.format('YYYY-MM-DD'),
-        endDate: filter.endDate?.format('YYYY-MM-DD'),
-      };
-
-      console.log('Search params:', params);
-      const [jobWorksRes, summaryRes] = await Promise.all([
-        axios.get('/api/JobWork/list', { params }),
-        axios.get('/api/JobWork/summary', { params }),
-      ]);
-
-      console.log('Search results:', { jobWorks: jobWorksRes.data, summary: summaryRes.data });
-
-      setJobWorks(Array.isArray(jobWorksRes.data) ? jobWorksRes.data : []);
-      setSummary(summaryRes.data);
+      setLoading(true);
+      setError(null);
+      const response = await jobWorkService.getJobWorks({
+        ...filters,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        sortBy: pagination.sortBy,
+        sortOrder: pagination.sortOrder
+      });
+      setJobWorks(response.data);
+      setPagination(prev => ({ ...prev, total: response.total }));
     } catch (error) {
       console.error('Error fetching job works:', error);
-      if (axios.isAxiosError(error)) {
-        setError(`Failed to load job works: ${error.response?.data?.message || error.message}`);
-      } else {
-        setError('Failed to load job works. Please try again later.');
-      }
+      setError('Failed to fetch job works');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSummary = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await jobWorkService.getJobWorkSummary(filters);
+      setSummary({
+        ...response,
+        totalRecords: response.totalRecords || 0
+      });
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+      setError('Failed to fetch summary');
     } finally {
       setLoading(false);
     }
@@ -217,9 +265,9 @@ const JobWork = () => {
     try {
       setError(null);
       const params = {
-        ...filter,
-        startDate: filter.startDate?.format('YYYY-MM-DD'),
-        endDate: filter.endDate?.format('YYYY-MM-DD'),
+        ...filters,
+        startDate: filters.startDate?.format('YYYY-MM-DD'),
+        endDate: filters.endDate?.format('YYYY-MM-DD'),
       };
 
       const response = await axios.get(`/api/JobWork/export/${format}`, {
@@ -238,6 +286,32 @@ const JobWork = () => {
       console.error(`Error exporting to ${format}:`, error);
       setError(`Failed to export to ${format.toUpperCase()}. Please try again later.`);
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    // Update the page in the pagination state
+    setPagination(prev => ({ ...prev, page: newPage }));
+    // Fetch data with the new pagination settings
+    handleSearch();
+  };
+
+  const handleResetFilters = () => {
+    // Reset all filters to their default values
+    setFilters({
+      startDate: null,
+      endDate: null,
+      jobId: '',
+      jobWorkTypeId: '',
+      unitId: '',
+      employeeId: '',
+      jobType: '',
+    });
+    
+    // Reset pagination
+    setPagination(prev => ({ ...prev, page: 1 }));
+    
+    // Clear employee input value
+    setEmployeeInputValue('');
   };
 
   const fetchEmployees = async (searchTerm: string) => {
@@ -276,7 +350,7 @@ const JobWork = () => {
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <ToggleButtonGroup
-                value={filter.jobType}
+                value={filters.jobType}
                 exclusive
                 onChange={(e, newValue) => {
                   if (newValue !== null) {
@@ -297,7 +371,7 @@ const JobWork = () => {
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="Start Date"
-                  value={filter.startDate}
+                  value={filters.startDate}
                   onChange={(date) => handleFilterChange('startDate', date)}
                   slotProps={{ textField: { fullWidth: true } }}
                 />
@@ -307,7 +381,7 @@ const JobWork = () => {
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="End Date"
-                  value={filter.endDate}
+                  value={filters.endDate}
                   onChange={(date) => handleFilterChange('endDate', date)}
                   slotProps={{ textField: { fullWidth: true } }}
                 />
@@ -317,7 +391,7 @@ const JobWork = () => {
               <FormControl fullWidth>
                 <InputLabel>Job</InputLabel>
                 <Select
-                  value={filter.jobId}
+                  value={filters.jobId}
                   label="Job"
                   onChange={(e) => handleFilterChange('jobId', e.target.value)}
                 >
@@ -334,7 +408,7 @@ const JobWork = () => {
               <FormControl fullWidth>
                 <InputLabel>Job Work Type</InputLabel>
                 <Select
-                  value={filter.jobWorkTypeId}
+                  value={filters.jobWorkTypeId}
                   label="Job Work Type"
                   onChange={(e) => handleFilterChange('jobWorkTypeId', e.target.value)}
                 >
@@ -351,7 +425,7 @@ const JobWork = () => {
               <FormControl fullWidth>
                 <InputLabel>Unit</InputLabel>
                 <Select
-                  value={filter.unitId}
+                  value={filters.unitId}
                   label="Unit"
                   onChange={(e) => handleFilterChange('unitId', e.target.value)}
                 >
@@ -372,16 +446,23 @@ const JobWork = () => {
                   if (typeof option === 'string') return option;
                   return option.name;
                 }}
-                value={filter.employeeId}
+                value={employees.find(emp => emp.employeeId === filters.employeeId) || null}
                 onChange={(event, newValue) => {
                   if (typeof newValue === 'string') {
                     handleFilterChange('employeeId', newValue);
                   } else if (newValue) {
                     handleFilterChange('employeeId', newValue.employeeId);
+                  } else {
+                    handleFilterChange('employeeId', '');
                   }
                 }}
-                onInputChange={(event, newInputValue) => {
-                  setEmployeeInputValue(newInputValue);
+                onInputChange={(event, newInputValue, reason) => {
+                  if (reason !== 'clear') {
+                    setEmployeeInputValue(newInputValue);
+                  }
+                  if (reason === 'clear') {
+                    handleFilterChange('employeeId', '');
+                  }
                 }}
                 renderInput={(params) => (
                   <TextField
@@ -412,6 +493,13 @@ const JobWork = () => {
                   disabled={loading}
                 >
                   Search
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={handleResetFilters}
+                  disabled={loading}
+                >
+                  Reset All
                 </Button>
                 <Tooltip title="Export to Excel">
                   <IconButton onClick={() => handleExport('excel')}>
@@ -498,6 +586,20 @@ const JobWork = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          {/* Pagination */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}>
+            <Pagination
+              count={Math.ceil(pagination.total / pagination.pageSize)}
+              page={pagination.page}
+              onChange={(event, newPage) => {
+                // Just call handlePageChange which will update the pagination state and fetch data
+                handlePageChange(newPage);
+              }}
+              color="primary"
+              showFirstButton
+              showLastButton
+            />
+          </Box>
         </Paper>
       </Box>
     </DashboardLayout>
