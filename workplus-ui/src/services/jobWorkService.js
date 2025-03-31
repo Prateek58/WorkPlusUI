@@ -12,7 +12,7 @@ const getJobWorks = async (params) => {
       jobType: params.jobType,
       page: params.page || 1,
       pageSize: params.pageSize || 10,
-      sortBy: params.sortBy || 'createdAt',
+      sortBy: params.sortBy || 'entryDate',
       sortOrder: params.sortOrder || 'desc'
     };
 

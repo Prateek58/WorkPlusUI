@@ -65,15 +65,20 @@ interface JobWorkFilter {
 }
 
 interface JobWork {
-  id: string;
-  jobName: string;
-  jobWorkTypeName: string;
+  entryId: number;
+  entryDate: string;
+  jwNo: string;
+  workName: string;
+  workType: string;
+  groupName: string;
   employeeName: string;
-  date: string;
-  hours: number;
-  quantity: number;
+  qtyItems: number;
+  qtyHours: number;
+  rateForJob: number;
+  totalAmount: number;
   unitName: string;
-  amount: number;
+  isApproved: boolean;
+  remarks: string;
 }
 
 interface JobWorkSummary {
@@ -152,7 +157,7 @@ const JobWork = () => {
     page: 1,
     pageSize: 10,
     total: 0,
-    sortBy: 'createdAt',
+    sortBy: 'entryDate',
     sortOrder: 'desc',
   });
   const [units, setUnits] = useState<Unit[]>([]);
@@ -546,40 +551,44 @@ const JobWork = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Job</TableCell>
-                  <TableCell>Job Work Type</TableCell>
-                  <TableCell>Employee</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell align="right">Hours</TableCell>
-                  <TableCell align="right">Quantity</TableCell>
                   <TableCell>Unit</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Job</TableCell>
+                  <TableCell align="right">Hours</TableCell>
+                  <TableCell align="right">Rate/day</TableCell>
+                  <TableCell align="right">Rate</TableCell>
+                  <TableCell align="right">Quantity</TableCell>
                   <TableCell align="right">Amount</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={13} align="center">
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : !Array.isArray(jobWorks) || jobWorks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={13} align="center">
                       No records found
                     </TableCell>
                   </TableRow>
                 ) : (
                   jobWorks.map((jobWork) => (
-                    <TableRow key={jobWork.id}>
-                      <TableCell>{jobWork.jobName}</TableCell>
-                      <TableCell>{jobWork.jobWorkTypeName}</TableCell>
-                      <TableCell>{jobWork.employeeName}</TableCell>
-                      <TableCell>{dayjs(jobWork.date).format('DD/MM/YYYY')}</TableCell>
-                      <TableCell align="right">{jobWork.hours}</TableCell>
-                      <TableCell align="right">{jobWork.quantity}</TableCell>
+                    <TableRow key={jobWork.entryId}>
                       <TableCell>{jobWork.unitName}</TableCell>
-                      <TableCell align="right">₹{jobWork.amount.toFixed(2)}</TableCell>
+                      <TableCell>{dayjs(jobWork.entryDate).format('DD/MM/YYYY')}</TableCell>
+                      <TableCell>{jobWork.workType}</TableCell>
+                      <TableCell>{jobWork.workName}</TableCell>
+                      <TableCell align="right">{jobWork.qtyHours}</TableCell>
+                      <TableCell align="right">₹{(jobWork.rateForJob * 8)?.toFixed(2)}</TableCell>
+                      <TableCell align="right">₹{jobWork.rateForJob?.toFixed(2)}</TableCell>
+                      <TableCell align="right">{jobWork.qtyItems}</TableCell>
+                      <TableCell align="right">₹{jobWork.totalAmount?.toFixed(2)}</TableCell>
+                      
+                    
                     </TableRow>
                   ))
                 )}
