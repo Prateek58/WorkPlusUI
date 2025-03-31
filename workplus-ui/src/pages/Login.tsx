@@ -14,6 +14,7 @@ import {
   Visibility,
   VisibilityOff,
   Email as EmailIcon,
+  Lock as LockIcon,
 } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
@@ -114,7 +115,7 @@ const Login = () => {
             </Alert>
           )}
 
-          <Stack spacing={3}>
+          <Stack spacing={2}>
             <TextField
               fullWidth
               label="Username"
@@ -135,6 +136,7 @@ const Login = () => {
                   borderRadius: 2,
                   bgcolor: '#ffffff',
                   color: '#1a1a1a',
+                  height: '36px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: '#e0e0e0',
                   },
@@ -145,8 +147,10 @@ const Login = () => {
                 },
                 '& .MuiInputLabel-root': {
                   color: '#666666',
+                  transform: 'translate(14px, 8px) scale(1)',
                   '&.Mui-focused': {
                     color: '#1976d2',
+                    transform: 'translate(14px, -9px) scale(0.75)',
                   },
                 },
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -170,6 +174,11 @@ const Login = () => {
               required
               autoComplete="new-password"
               InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockIcon sx={{ color: '#666666' }} />
+                  </InputAdornment>
+                ),
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
@@ -187,6 +196,7 @@ const Login = () => {
                   borderRadius: 2,
                   bgcolor: '#ffffff',
                   color: '#1a1a1a',
+                  height: '36px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: '#e0e0e0',
                   },
@@ -197,8 +207,10 @@ const Login = () => {
                 },
                 '& .MuiInputLabel-root': {
                   color: '#666666',
+                  transform: 'translate(14px, 8px) scale(1)',
                   '&.Mui-focused': {
                     color: '#1976d2',
+                    transform: 'translate(14px, -9px) scale(0.75)',
                   },
                 },
                 '& .MuiOutlinedInput-notchedOutline': {
@@ -216,20 +228,21 @@ const Login = () => {
               fullWidth
               type="submit"
               variant="contained"
-              size="large"
+              size="medium"
               disabled={loading}
               sx={{
                 borderRadius: 2,
-                py: 1.5,
+                py: 1,
                 textTransform: 'none',
-                fontSize: '1rem',
+                fontSize: '0.875rem',
+                height: '36px',
                 bgcolor: '#1976d2',
                 '&:hover': {
                   bgcolor: '#1565c0',
                 },
               }}
             >
-              {loading ? <CircularProgress size={24} /> : 'Sign In'}
+              {loading ? <CircularProgress size={20} /> : 'Sign In'}
             </Button>
 
             {/* Social Login Section */}

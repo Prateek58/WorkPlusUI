@@ -21,18 +21,18 @@ import {
 } from '@mui/material';
 import {
   Menu as MenuIcon,
+  MenuOpen as MenuOpenIcon,
   Dashboard as DashboardIcon,
   Person as PersonIcon,
   Settings as SettingsIcon,
   Notifications as NotificationsIcon,
   Search as SearchIcon,
-  ChevronLeft as ChevronLeftIcon,
   Analytics as AnalyticsIcon,
   ShoppingCart as ShoppingCartIcon,
   School as SchoolIcon,
   LocalShipping as LogisticsIcon,
-  ExpandLess,
-  ExpandMore,
+  ArrowDropDown as ArrowDropDownIcon,
+  ArrowDropUp as ArrowDropUpIcon,
   Description as DescriptionIcon,
   LocalShipping as TruckIcon,
   Engineering as JobWorkIcon,
@@ -47,11 +47,11 @@ import logoTransparent from '../assets/logo-trans.png';
 import logo from '../assets/logo.png';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { RootState } from '../store/store';
 
-const drawerWidth = 280;
-const collapsedWidth = 80;
+const drawerWidth = 240;
+const collapsedWidth = 64;
 
 const StyledDrawer = styled(Drawer)(({ theme }) => ({
   '& .MuiDrawer-paper': {
@@ -73,12 +73,13 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [open, setOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
+  const [openSubMenu, setOpenSubMenu] = useState<string | null>('legacy-reports');
   const theme = useTheme();
   const { toggleColorMode, mode } = useThemeContext();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
 
   const handleDrawerToggle = () => {
@@ -111,12 +112,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     handleProfileMenuClose();
   };
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   const menuItems = [
     { text: 'Dashboards', icon: <DashboardIcon />, count: 5, path: '/dashboard' },
-    { text: 'CRM', icon: <AnalyticsIcon />, path: '/crm' },
-    { text: 'eCommerce', icon: <ShoppingCartIcon />, path: '/ecommerce' },
-    { text: 'Academy', icon: <SchoolIcon />, path: '/academy' },
-    { text: 'Logistics', icon: <LogisticsIcon />, path: '/logistics' },
     { 
       text: 'Legacy Reports', 
       icon: <DescriptionIcon />,
@@ -144,27 +145,29 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             opacity: open ? 1 : 0,
             transition: 'opacity 0.2s',
             display: open ? 'block' : 'none',
-            width: '140px',
+            width: '160px',
           }}
         >
           <img
             src={mode === 'dark' ? logo : logoTransparent}
             alt="Logo"
             style={{
-              width: '130%',
+              width: '100%',
               height: 'auto',
               objectFit: 'contain',
+              borderRadius: '4px',
             }}
           />
         </Box>
         <IconButton 
           onClick={toggleDrawer}
           sx={{
-            transform: open ? 'none' : 'rotate(180deg)',
-            transition: 'transform 0.3s',
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.25rem',
+            }
           }}
         >
-          <ChevronLeftIcon />
+          {open ? <MenuOpenIcon /> : <MenuIcon />}
         </IconButton>
       </Box>
 
@@ -184,11 +187,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 borderRadius: 2,
                 mb: item.subItems ? 0 : 1,
                 cursor: 'pointer',
+                backgroundColor: item.path && isActive(item.path) ? 'primary.main' : 'transparent',
                 '&:hover': {
                   backgroundColor: 'primary.main',
                   '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
                     color: 'white',
                   },
+                },
+                '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                  color: item.path && isActive(item.path) ? 'white' : 'inherit',
                 },
               }}
             >
@@ -216,13 +223,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               {item.subItems && open && (
                 <IconButton 
                   size="small" 
-                  sx={{ ml: 'auto' }}
+                  sx={{ 
+                    ml: 'auto',
+                    '& .MuiSvgIcon-root': {
+                      fontSize: '1.25rem',
+                    }
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSubMenuClick(item.id);
                   }}
                 >
-                  {openSubMenu === item.id ? <ExpandLess /> : <ExpandMore />}
+                  {openSubMenu === item.id ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
                 </IconButton>
               )}
             </ListItem>
@@ -235,15 +247,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       component="div"
                       onClick={() => subItem.path && handleNavigate(subItem.path)}
                       sx={{
-                        pl: 4,
+                        pl: 6,
                         borderRadius: 2,
                         mb: 1,
                         cursor: 'pointer',
+                        backgroundColor: subItem.path && isActive(subItem.path) ? 'primary.main' : 'transparent',
+                        borderLeft: `2px solid ${theme.palette.mode === 'light' 
+                          ? 'rgba(0, 0, 0, 0.08)' 
+                          : 'rgba(255, 255, 255, 0.08)'}`,
                         '&:hover': {
                           backgroundColor: 'primary.main',
+                          borderLeftColor: 'primary.main',
                           '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
                             color: 'white',
                           },
+                        },
+                        '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+                          color: subItem.path && isActive(subItem.path) ? 'white' : 'inherit',
                         },
                       }}
                     >
@@ -271,7 +291,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <AppBar
         position="fixed"
         sx={{
-          bgcolor: 'background.paper',
+          bgcolor: theme.palette.mode === 'dark' ? 'transparent' : 'background.paper',
           boxShadow: 'none',
           width: { sm: `calc(100% - ${open ? drawerWidth : collapsedWidth}px)` },
           ml: { sm: `${open ? drawerWidth : collapsedWidth}px` },
@@ -281,7 +301,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           }),
         }}
       >
-        <Toolbar>
+        <Toolbar
+          sx={{
+            bgcolor: theme.palette.mode === 'dark' ? '#0A1929' : 'background.paper',
+            minHeight: '64px !important',
+          }}
+        >
           <IconButton
             color="inherit"
             edge="start"
@@ -291,7 +316,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <MenuIcon />
           </IconButton>
           
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{  flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <SearchIcon sx={{ position: 'absolute', left: 8, color: 'text.secondary' }} />
               <input
@@ -300,7 +325,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   border: 'none',
                   padding: '8px 8px 8px 36px',
                   borderRadius: 8,
-                  backgroundColor: theme.palette.mode === 'light' ? '#F4F5FA' : '#32334D',
+                  backgroundColor: theme.palette.mode === 'light' ? '#F4F5FA' : '#182536',
                   color: theme.palette.text.primary,
                   width: '250px',
                 }}
@@ -346,18 +371,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           sx: {
             mt: 1,
             width: 220,
+            py: 0.5,
           },
         }}
       >
-        <Box sx={{ px: 2, py: 1.5 }}>
-          <Typography variant="subtitle1" noWrap>
+        <Box sx={{ px: 2, py: 1 }}>
+          <Typography variant="subtitle2" noWrap>
             {user?.username || 'User'}
           </Typography>
-          <Typography variant="body2" color="text.secondary" noWrap>
+          <Typography variant="caption" color="text.secondary" noWrap>
             {user?.email || 'user@example.com'}
           </Typography>
         </Box>
-        <Divider />
+        <Divider sx={{ my: 0.5 }} />
         <MenuItem onClick={() => handleNavigate('/profile')}>
           <ListItemIcon>
             <PersonIcon fontSize="small" />
@@ -376,7 +402,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </ListItemIcon>
           Help
         </MenuItem>
-        <Divider />
+        <Divider sx={{ my: 0.5 }} />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
@@ -434,9 +460,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: 2,
           width: { sm: `calc(100% - ${open ? drawerWidth : collapsedWidth}px)` },
-          mt: 8,
+          mt: 7,
           transition: (theme) => theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,

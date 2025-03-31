@@ -340,7 +340,7 @@ const JobWork = () => {
   return (
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" sx={{ mb: 3, mt: 4 }}>
           Job Works
         </Typography>
 
@@ -587,8 +587,6 @@ const JobWork = () => {
                       <TableCell align="right">₹{jobWork.rateForJob?.toFixed(2)}</TableCell>
                       <TableCell align="right">{jobWork.qtyItems}</TableCell>
                       <TableCell align="right">₹{jobWork.totalAmount?.toFixed(2)}</TableCell>
-                      
-                    
                     </TableRow>
                   ))
                 )}
@@ -596,12 +594,11 @@ const JobWork = () => {
             </Table>
           </TableContainer>
           {/* Pagination */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
             <Pagination
               count={Math.ceil(pagination.total / pagination.pageSize)}
               page={pagination.page}
               onChange={(event, newPage) => {
-                // Just call handlePageChange which will update the pagination state and fetch data
                 handlePageChange(newPage);
               }}
               color="primary"
