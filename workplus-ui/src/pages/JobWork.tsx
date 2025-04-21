@@ -35,6 +35,8 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import DashboardLayout from '../components/DashboardLayout';
 import jobWorkService from '../services/jobWorkService';
+import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 // Configure axios defaults
 axios.defaults.baseURL = 'https://localhost:7160';
@@ -145,8 +147,8 @@ const JobWork = () => {
   const [jobWorks, setJobWorks] = useState<any[]>([]);
   const [summary, setSummary] = useState<SummaryState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
-    startDate: null,
-    endDate: null,
+    startDate: dayjs(),
+    endDate: dayjs(),
     jobId: '',
     jobWorkTypeId: '',
     unitId: '',
@@ -165,6 +167,10 @@ const JobWork = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeeInputValue, setEmployeeInputValue] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  
+  // Key state to force re-render of Autocomplete
+  const [autocompleteKey, setAutocompleteKey] = useState(0);
 
   useEffect(() => {
     fetchInitialData();
@@ -210,7 +216,39 @@ const JobWork = () => {
     // Reset pagination when any filter changes
     setPagination(prev => ({ ...prev, page: 1 }));
     
-    setFilters(prev => ({ ...prev, [field]: value }));
+    // Date validation
+    if (field === 'startDate' && value && filters.endDate && dayjs(value).isAfter(filters.endDate)) {
+      setError('Start date cannot be greater than end date');
+      return;
+    }
+    
+    if (field === 'endDate' && value && filters.startDate && dayjs(filters.startDate).isAfter(value)) {
+      setError('End date cannot be less than start date');
+      return;
+    }
+    
+    // Clear any existing validation errors
+    if (error && (field === 'startDate' || field === 'endDate')) {
+      setError(null);
+    }
+    
+    // Handle missing date pairs
+    if (field === 'startDate' && value && !filters.endDate) {
+      // If setting start date and no end date is set, set end date to same date
+      setFilters(prev => ({ ...prev, [field]: value, endDate: value }));
+    } else if (field === 'endDate' && value && !filters.startDate) {
+      // If setting end date and no start date is set, set start date to same date
+      setFilters(prev => ({ ...prev, [field]: value, startDate: value }));
+    } else {
+      // Normal case, just update the specified field
+      setFilters(prev => ({ ...prev, [field]: value }));
+    }
+    
+    // If employeeId changes, update selectedEmployee
+    if (field === 'employeeId') {
+      const employee = employees.find(emp => emp.employeeId === value) || null;
+      setSelectedEmployee(employee);
+    }
     
     // If jobType changes, reset jobId and fetch new jobs
     if (field === 'jobType') {
@@ -253,14 +291,113 @@ const JobWork = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await jobWorkService.getJobWorkSummary(filters);
-      setSummary({
-        ...response,
-        totalRecords: response.totalRecords || 0
+      
+      const today = dayjs();
+      let params: Record<string, any> = {
+        ...filters,
+      };
+      
+      // Case 1: If both dates are today's date, give all data till today (null start date)
+      if (filters.startDate && filters.endDate && 
+          filters.startDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD') && 
+          filters.endDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD')) {
+        params.startDate = null;
+        params.endDate = today.format('YYYY-MM-DD');
+      } 
+      // Case 2: Otherwise use the date range as specified
+      else if (filters.startDate && filters.endDate) {
+        params.startDate = filters.startDate.format('YYYY-MM-DD');
+        params.endDate = filters.endDate.format('YYYY-MM-DD');
+      }
+      // Case 3: Default to today if no dates provided
+      else {
+        params.startDate = null;
+        params.endDate = today.format('YYYY-MM-DD');
+      }
+
+      console.log('Sending summary request with params:', params);
+
+      const response = await axios.get('/api/JobWork/export/summary', {
+        params,
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf',
+          'Content-Type': 'application/json'
+        }
       });
+
+      console.log('Response received:', response);
+
+      // Create blob with proper type
+      const blob = new Blob([response.data], { 
+        type: 'application/pdf'
+      });
+
+      // Check blob validity
+      if (blob.size === 0) {
+        setError('Failed to generate summary PDF. Empty response received.');
+        return;
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Create appropriate filename based on date parameters
+      let fileName: string;
+      if (!params.startDate) {
+        // "As on" report for today
+        const asOnDate = params.endDate ? dayjs(params.endDate as string) : today;
+        fileName = `JOB_WORK_SUMMARY_AS_ON_${asOnDate.format('DDMMMYYYY')}.pdf`;
+      } else {
+        // Date range report
+        const startDate = dayjs(params.startDate as string);
+        const endDate = dayjs(params.endDate as string);
+        fileName = `JOB_WORK_SUMMARY_${startDate.format('DDMMMYYYY')}_TO_${endDate.format('DDMMMYYYY')}.pdf`;
+      }
+      
+      link.setAttribute('download', fileName);
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
     } catch (error) {
-      console.error('Error fetching summary:', error);
-      setError('Failed to fetch summary');
+      console.error('Error generating summary PDF:', error);
+      if (axios.isAxiosError(error)) {
+        // Log detailed error information
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          headers: error.response?.headers,
+          data: error.response?.data
+        });
+        
+        if (error.response?.data instanceof Blob) {
+          // Try to read error message from blob
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const jsonResponse = JSON.parse(reader.result as string);
+              setError(jsonResponse.message || 'Failed to generate PDF');
+            } catch {
+              setError('Failed to generate PDF. Server returned an error.');
+            }
+          };
+          reader.readAsText(error.response.data);
+        } else {
+          setError(error.response?.data?.message || 'Failed to generate summary PDF. Please try again later.');
+        }
+      } else {
+        setError('Failed to generate summary PDF. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -268,28 +405,117 @@ const JobWork = () => {
 
   const handleExport = async (format: 'excel' | 'pdf') => {
     try {
+      setLoading(true);
       setError(null);
-      const params = {
+      
+      const today = dayjs();
+      let params: Record<string, any> = {
         ...filters,
-        startDate: filters.startDate?.format('YYYY-MM-DD'),
-        endDate: filters.endDate?.format('YYYY-MM-DD'),
       };
+      
+      // Case 1: If both dates are today's date, give all data till today (null start date)
+      if (filters.startDate && filters.endDate && 
+          filters.startDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD') && 
+          filters.endDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD')) {
+        params.startDate = null;
+        params.endDate = today.format('YYYY-MM-DD');
+      } 
+      // Case 2: Otherwise use the date range as specified
+      else if (filters.startDate && filters.endDate) {
+        params.startDate = filters.startDate.format('YYYY-MM-DD');
+        params.endDate = filters.endDate.format('YYYY-MM-DD');
+      }
+      // Case 3: Default to today if no dates provided
+      else {
+        params.startDate = null;
+        params.endDate = today.format('YYYY-MM-DD');
+      }
+
+      console.log('Sending export request with params:', params);
 
       const response = await axios.get(`/api/JobWork/export/${format}`, {
         params,
         responseType: 'blob',
+        headers: {
+          'Accept': format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/json'
+        }
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      console.log('Response received:', response);
+
+      // Create blob with proper type
+      const blob = new Blob([response.data], { 
+        type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      // If blob is empty or invalid
+      if (blob.size === 0) {
+        setError(`Failed to export to ${format.toUpperCase()}. Empty response received.`);
+        return;
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `jobworks.${format}`);
+      
+      // Create appropriate filename based on date parameters
+      let fileName: string;
+      if (!params.startDate) {
+        // "As on" report
+        const asOnDate = params.endDate ? dayjs(params.endDate as string) : today;
+        fileName = `JOB_WORK_AS_ON_${asOnDate.format('DDMMMYYYY')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+      } else {
+        // Date range report
+        const startDate = dayjs(params.startDate as string);
+        const endDate = dayjs(params.endDate as string);
+        fileName = `JOB_WORK_${startDate.format('DDMMMYYYY')}_TO_${endDate.format('DDMMMYYYY')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+      }
+      
+      link.setAttribute('download', fileName);
+      
+      // Trigger download
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
     } catch (error) {
       console.error(`Error exporting to ${format}:`, error);
-      setError(`Failed to export to ${format.toUpperCase()}. Please try again later.`);
+      if (axios.isAxiosError(error)) {
+        // Log detailed error information
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          headers: error.response?.headers,
+          data: error.response?.data
+        });
+        
+        if (error.response?.data instanceof Blob) {
+          // Try to read error message from blob
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const jsonResponse = JSON.parse(reader.result as string);
+              setError(jsonResponse.message || `Failed to export to ${format.toUpperCase()}`);
+            } catch {
+              setError(`Failed to export to ${format.toUpperCase()}. Server returned an error.`);
+            }
+          };
+          reader.readAsText(error.response.data);
+        } else {
+          setError(error.response?.data?.message || `Failed to export to ${format.toUpperCase()}. Please try again later.`);
+        }
+      } else {
+        setError(`Failed to export to ${format.toUpperCase()}. Please try again later.`);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -303,8 +529,8 @@ const JobWork = () => {
   const handleResetFilters = () => {
     // Reset all filters to their default values
     setFilters({
-      startDate: null,
-      endDate: null,
+      startDate: dayjs(),
+      endDate: dayjs(),
       jobId: '',
       jobWorkTypeId: '',
       unitId: '',
@@ -315,8 +541,18 @@ const JobWork = () => {
     // Reset pagination
     setPagination(prev => ({ ...prev, page: 1 }));
     
-    // Clear employee input value
+    // Clear employee input value and selection
     setEmployeeInputValue('');
+    setSelectedEmployee(null);
+    
+    // Force re-mount of Autocomplete to clear it completely
+    setAutocompleteKey(prev => prev + 1);
+    
+    // Clear the results without making a new search
+    setJobWorks([]);
+    
+    // Clear any validation errors
+    setError(null);
   };
 
   const fetchEmployees = async (searchTerm: string) => {
@@ -374,22 +610,64 @@ const JobWork = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="Start Date"
-                  value={filters.startDate}
-                  onChange={(date) => handleFilterChange('startDate', date)}
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
+                <Box sx={{ position: 'relative' }}>
+                  <DatePicker
+                    label="Start Date"
+                    value={filters.startDate}
+                    onChange={(date) => handleFilterChange('startDate', date)}
+                    slotProps={{ 
+                      textField: { 
+                        fullWidth: true,
+                      } 
+                    }}
+                  />
+                  {filters.startDate && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleFilterChange('startDate', null)}
+                      sx={{
+                        position: 'absolute',
+                        right: '40px', // Position before the calendar icon
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 1
+                      }}
+                    >
+                      <RefreshIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
               </LocalizationProvider>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="End Date"
-                  value={filters.endDate}
-                  onChange={(date) => handleFilterChange('endDate', date)}
-                  slotProps={{ textField: { fullWidth: true } }}
-                />
+                <Box sx={{ position: 'relative' }}>
+                  <DatePicker
+                    label="End Date"
+                    value={filters.endDate}
+                    onChange={(date) => handleFilterChange('endDate', date)}
+                    slotProps={{ 
+                      textField: { 
+                        fullWidth: true,
+                      } 
+                    }}
+                  />
+                  {filters.endDate && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleFilterChange('endDate', null)}
+                      sx={{
+                        position: 'absolute',
+                        right: '40px', // Position before the calendar icon
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 1
+                      }}
+                    >
+                      <RefreshIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
               </LocalizationProvider>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -445,20 +723,23 @@ const JobWork = () => {
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Autocomplete
+                key={autocompleteKey}
                 freeSolo
                 options={employees}
                 getOptionLabel={(option) => {
                   if (typeof option === 'string') return option;
                   return option.name;
                 }}
-                value={employees.find(emp => emp.employeeId === filters.employeeId) || null}
+                value={selectedEmployee}
                 onChange={(event, newValue) => {
                   if (typeof newValue === 'string') {
                     handleFilterChange('employeeId', newValue);
                   } else if (newValue) {
                     handleFilterChange('employeeId', newValue.employeeId);
+                    setSelectedEmployee(newValue);
                   } else {
                     handleFilterChange('employeeId', '');
+                    setSelectedEmployee(null);
                   }
                 }}
                 onInputChange={(event, newInputValue, reason) => {
@@ -494,56 +775,68 @@ const JobWork = () => {
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button
                   variant="contained"
+                  startIcon={<SearchIcon />}
                   onClick={handleSearch}
-                  disabled={loading}
+                  sx={{
+                    bgcolor: 'primary.main',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    },
+                  }}
                 >
                   Search
                 </Button>
                 <Button
+                  variant="contained"
+                  startIcon={<RefreshIcon />}
+                  onClick={handleSummary}
+                  sx={{
+                    bgcolor: 'success.main',
+                    '&:hover': {
+                      bgcolor: 'success.dark',
+                    },
+                  }}
+                >
+                  Summary PDF
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => handleExport('excel')}
+                  sx={{
+                    bgcolor: 'info.main',
+                    '&:hover': {
+                      bgcolor: 'info.dark',
+                    },
+                  }}
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<PictureAsPdfIcon />}
+                  onClick={() => handleExport('pdf')}
+                  sx={{
+                    bgcolor: 'error.main',
+                    '&:hover': {
+                      bgcolor: 'error.dark',
+                    },
+                  }}
+                >
+                  Export PDF
+                </Button>
+                <Button
                   variant="outlined"
+                  startIcon={<RefreshIcon />}
                   onClick={handleResetFilters}
                   disabled={loading}
                 >
                   Reset All
                 </Button>
-                <Tooltip title="Export to Excel">
-                  <IconButton onClick={() => handleExport('excel')}>
-                    <DownloadIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Export to PDF">
-                  <IconButton onClick={() => handleExport('pdf')}>
-                    <PictureAsPdfIcon />
-                  </IconButton>
-                </Tooltip>
               </Box>
             </Grid>
           </Grid>
         </Paper>
-
-        {/* Summary */}
-        {summary && (
-          <Paper sx={{ p: 2, mb: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="subtitle2">Total Hours</Typography>
-                <Typography variant="h6">{summary.totalHours}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="subtitle2">Total Quantity</Typography>
-                <Typography variant="h6">{summary.totalQuantity}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="subtitle2">Total Amount</Typography>
-                <Typography variant="h6">₹{summary.totalAmount.toFixed(2)}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Typography variant="subtitle2">Total Records</Typography>
-                <Typography variant="h6">{summary.totalRecords}</Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        )}
 
         {/* Results Table */}
         <Paper>

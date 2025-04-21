@@ -48,7 +48,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 },
                 background: {
                   default: '#0a1929',
-                  paper: '#1a21480f',
+                  paper: '#1a2148',
                 },
               }
             : {
