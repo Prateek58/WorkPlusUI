@@ -25,6 +25,13 @@ import {
   Alert,
   Pagination,
   TableSortLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -141,6 +148,12 @@ interface SummaryState {
   totalRecords: number;
 }
 
+interface ColumnOption {
+  id: string;
+  label: string;
+  selected: boolean;
+}
+
 const JobWork = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +184,24 @@ const JobWork = () => {
   
   // Key state to force re-render of Autocomplete
   const [autocompleteKey, setAutocompleteKey] = useState(0);
+
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+  const [exportType, setExportType] = useState<string | null>(null);
+  const [columnOptions, setColumnOptions] = useState<ColumnOption[]>([
+    { id: 'unitName', label: 'Unit', selected: true },
+    { id: 'entryDate', label: 'Date', selected: true },
+    { id: 'workType', label: 'Type', selected: true },
+    { id: 'workName', label: 'Job', selected: true },
+    { id: 'qtyHours', label: 'Hours', selected: true },
+    { id: 'rateForJob', label: 'Rate/day', selected: true },
+    { id: 'qtyItems', label: 'Quantity', selected: true },
+    { id: 'totalAmount', label: 'Amount', selected: true },
+    { id: 'employeeName', label: 'Employee', selected: true },
+    { id: 'jwNo', label: 'Job Work No.', selected: false },
+    { id: 'groupName', label: 'Group', selected: false },
+    { id: 'isApproved', label: 'Is Approved', selected: false },
+    { id: 'remarks', label: 'Remarks', selected: false },
+  ]);
 
   useEffect(() => {
     fetchInitialData();
@@ -555,6 +586,257 @@ const JobWork = () => {
     }
   }, [employeeInputValue]);
 
+  const handleColumnToggle = (columnId: string) => {
+    setColumnOptions(prev => 
+      prev.map(col => 
+        col.id === columnId ? { ...col, selected: !col.selected } : col
+      )
+    );
+  };
+
+  const handleSelectAllColumns = (selected: boolean) => {
+    setColumnOptions(prev => 
+      prev.map(col => ({ ...col, selected }))
+    );
+  };
+
+  const showColumnSelectorDialog = (type: string) => {
+    setExportType(type);
+    setShowColumnSelector(true);
+  };
+
+  const handleExportWithColumns = () => {
+    setShowColumnSelector(false);
+    
+    // Create comma-separated list of selected column IDs
+    const selectedColumns = columnOptions
+      .filter(col => col.selected)
+      .map(col => col.id)
+      .join(',');
+    
+    if (exportType === 'summary') {
+      handleSummaryWithColumns(selectedColumns);
+    } else {
+      handleExportWithSelectedColumns(exportType!, selectedColumns);
+    }
+  };
+
+  const handleSummaryWithColumns = async (selectedColumns: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const today = dayjs();
+      let params: Record<string, any> = {
+        ...filters,
+        columns: selectedColumns,
+      };
+      
+      // Format any existing dates - backend will handle default dates
+      if (filters.startDate) {
+        params.startDate = filters.startDate.format('YYYY-MM-DD');
+      }
+      
+      if (filters.endDate) {
+        params.endDate = filters.endDate.format('YYYY-MM-DD');
+      }
+
+      console.log('Sending summary request with params:', params);
+
+      const response = await axios.get('/api/JobWork/export/summary', {
+        params,
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Response received:', response);
+
+      // Create blob with proper type
+      const blob = new Blob([response.data], { 
+        type: 'application/pdf'
+      });
+
+      // Check blob validity
+      if (blob.size === 0) {
+        setError('Failed to generate summary PDF. Empty response received.');
+        return;
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Create appropriate filename based on date parameters
+      let fileName: string;
+      if (!params.startDate) {
+        // "As on" report for today
+        const asOnDate = params.endDate ? dayjs(params.endDate as string) : today;
+        fileName = `JOB_WORK_SUMMARY_AS_ON_${asOnDate.format('DDMMMYYYY')}.pdf`;
+      } else {
+        // Date range report
+        const startDate = dayjs(params.startDate as string);
+        const endDate = dayjs(params.endDate as string);
+        fileName = `JOB_WORK_SUMMARY_${startDate.format('DDMMMYYYY')}_TO_${endDate.format('DDMMMYYYY')}.pdf`;
+      }
+      
+      link.setAttribute('download', fileName);
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+    } catch (error) {
+      console.error('Error generating summary PDF:', error);
+      if (axios.isAxiosError(error)) {
+        // Log detailed error information
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          headers: error.response?.headers,
+          data: error.response?.data
+        });
+        
+        if (error.response?.data instanceof Blob) {
+          // Try to read error message from blob
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const jsonResponse = JSON.parse(reader.result as string);
+              setError(jsonResponse.message || 'Failed to generate PDF');
+            } catch {
+              setError('Failed to generate PDF. Server returned an error.');
+            }
+          };
+          reader.readAsText(error.response.data);
+        } else {
+          setError(error.response?.data?.message || 'Failed to generate summary PDF. Please try again later.');
+        }
+      } else {
+        setError('Failed to generate summary PDF. Please try again later.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportWithSelectedColumns = async (type: string, selectedColumns: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const today = dayjs();
+      let params: Record<string, any> = {
+        ...filters,
+        columns: selectedColumns,
+      };
+      
+      // Format any existing dates - backend will handle default dates
+      if (filters.startDate) {
+        params.startDate = filters.startDate.format('YYYY-MM-DD');
+      }
+      
+      if (filters.endDate) {
+        params.endDate = filters.endDate.format('YYYY-MM-DD');
+      }
+
+      console.log(`Sending ${type} export request with params:`, params);
+
+      const response = await axios.get(`/api/JobWork/export/${type}`, {
+        params,
+        responseType: 'blob',
+        headers: {
+          'Accept': type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Response received:', response);
+
+      // Create blob with proper type
+      const blob = new Blob([response.data], { 
+        type: type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      // If blob is empty or invalid
+      if (blob.size === 0) {
+        setError(`Failed to export to ${type.toUpperCase()}. Empty response received.`);
+        return;
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Create appropriate filename based on date parameters
+      let fileName: string;
+      if (!params.startDate) {
+        // "As on" report
+        const asOnDate = params.endDate ? dayjs(params.endDate as string) : today;
+        fileName = `JOB_WORK_AS_ON_${asOnDate.format('DDMMMYYYY')}.${type === 'pdf' ? 'pdf' : 'xlsx'}`;
+      } else {
+        // Date range report
+        const startDate = dayjs(params.startDate as string);
+        const endDate = dayjs(params.endDate as string);
+        fileName = `JOB_WORK_${startDate.format('DDMMMYYYY')}_TO_${endDate.format('DDMMMYYYY')}.${type === 'pdf' ? 'pdf' : 'xlsx'}`;
+      }
+      
+      link.setAttribute('download', fileName);
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+    } catch (error) {
+      console.error(`Error exporting to ${type}:`, error);
+      if (axios.isAxiosError(error)) {
+        // Log detailed error information
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          headers: error.response?.headers,
+          data: error.response?.data
+        });
+        
+        if (error.response?.data instanceof Blob) {
+          // Try to read error message from blob
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const jsonResponse = JSON.parse(reader.result as string);
+              setError(jsonResponse.message || `Failed to export to ${type.toUpperCase()}`);
+            } catch {
+              setError(`Failed to export to ${type.toUpperCase()}. Server returned an error.`);
+            }
+          };
+          reader.readAsText(error.response.data);
+        } else {
+          setError(error.response?.data?.message || `Failed to export to ${type.toUpperCase()}. Please try again later.`);
+        }
+      } else {
+        setError(`Failed to export to ${type.toUpperCase()}. Please try again later.`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
@@ -771,7 +1053,7 @@ const JobWork = () => {
                 <Button
                   variant="contained"
                   startIcon={<RefreshIcon />}
-                  onClick={handleSummary}
+                  onClick={() => showColumnSelectorDialog('summary')}
                   sx={{
                     bgcolor: 'success.main',
                     '&:hover': {
@@ -784,7 +1066,7 @@ const JobWork = () => {
                 <Button
                   variant="contained"
                   startIcon={<DownloadIcon />}
-                  onClick={() => handleExport('excel')}
+                  onClick={() => showColumnSelectorDialog('excel')}
                   sx={{
                     bgcolor: 'info.main',
                     '&:hover': {
@@ -797,7 +1079,7 @@ const JobWork = () => {
                 <Button
                   variant="contained"
                   startIcon={<PictureAsPdfIcon />}
-                  onClick={() => handleExport('pdf')}
+                  onClick={() => showColumnSelectorDialog('pdf')}
                   sx={{
                     bgcolor: 'error.main',
                     '&:hover': {
@@ -819,6 +1101,55 @@ const JobWork = () => {
             </Grid>
           </Grid>
         </Paper>
+
+        {/* Column Selection Dialog */}
+        <Dialog open={showColumnSelector} onClose={() => setShowColumnSelector(false)}>
+          <DialogTitle>
+            Select Columns to Include
+          </DialogTitle>
+          <DialogContent>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={columnOptions.every(col => col.selected)}
+                    indeterminate={columnOptions.some(col => col.selected) && !columnOptions.every(col => col.selected)}
+                    onChange={(e) => handleSelectAllColumns(e.target.checked)}
+                  />
+                }
+                label="Select All"
+              />
+              <Box sx={{ borderTop: '1px solid #eee', my: 1, pt: 1 }} />
+              
+              <Grid container spacing={1}>
+                {columnOptions.map(col => (
+                  <Grid item xs={6} key={col.id}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={col.selected}
+                          onChange={() => handleColumnToggle(col.id)}
+                        />
+                      }
+                      label={col.label}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </FormGroup>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowColumnSelector(false)}>Cancel</Button>
+            <Button 
+              onClick={handleExportWithColumns} 
+              variant="contained" 
+              color="primary"
+              disabled={!columnOptions.some(col => col.selected)}
+            >
+              Export
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Results Table */}
         <Paper>
