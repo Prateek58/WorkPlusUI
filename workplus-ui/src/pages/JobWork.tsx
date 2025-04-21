@@ -147,8 +147,8 @@ const JobWork = () => {
   const [jobWorks, setJobWorks] = useState<any[]>([]);
   const [summary, setSummary] = useState<SummaryState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
-    startDate: dayjs(),
-    endDate: dayjs(),
+    startDate: null,
+    endDate: null,
     jobId: '',
     jobWorkTypeId: '',
     unitId: '',
@@ -297,22 +297,13 @@ const JobWork = () => {
         ...filters,
       };
       
-      // Case 1: If both dates are today's date, give all data till today (null start date)
-      if (filters.startDate && filters.endDate && 
-          filters.startDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD') && 
-          filters.endDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD')) {
-        params.startDate = null;
-        params.endDate = today.format('YYYY-MM-DD');
-      } 
-      // Case 2: Otherwise use the date range as specified
-      else if (filters.startDate && filters.endDate) {
+      // Format any existing dates - backend will handle default dates
+      if (filters.startDate) {
         params.startDate = filters.startDate.format('YYYY-MM-DD');
-        params.endDate = filters.endDate.format('YYYY-MM-DD');
       }
-      // Case 3: Default to today if no dates provided
-      else {
-        params.startDate = null;
-        params.endDate = today.format('YYYY-MM-DD');
+      
+      if (filters.endDate) {
+        params.endDate = filters.endDate.format('YYYY-MM-DD');
       }
 
       console.log('Sending summary request with params:', params);
@@ -403,7 +394,7 @@ const JobWork = () => {
     }
   };
 
-  const handleExport = async (format: 'excel' | 'pdf') => {
+  const handleExport = async (type: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -413,31 +404,22 @@ const JobWork = () => {
         ...filters,
       };
       
-      // Case 1: If both dates are today's date, give all data till today (null start date)
-      if (filters.startDate && filters.endDate && 
-          filters.startDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD') && 
-          filters.endDate.format('YYYY-MM-DD') === today.format('YYYY-MM-DD')) {
-        params.startDate = null;
-        params.endDate = today.format('YYYY-MM-DD');
-      } 
-      // Case 2: Otherwise use the date range as specified
-      else if (filters.startDate && filters.endDate) {
+      // Format any existing dates - backend will handle default dates
+      if (filters.startDate) {
         params.startDate = filters.startDate.format('YYYY-MM-DD');
+      }
+      
+      if (filters.endDate) {
         params.endDate = filters.endDate.format('YYYY-MM-DD');
       }
-      // Case 3: Default to today if no dates provided
-      else {
-        params.startDate = null;
-        params.endDate = today.format('YYYY-MM-DD');
-      }
 
-      console.log('Sending export request with params:', params);
+      console.log(`Sending ${type} export request with params:`, params);
 
-      const response = await axios.get(`/api/JobWork/export/${format}`, {
+      const response = await axios.get(`/api/JobWork/export/${type}`, {
         params,
         responseType: 'blob',
         headers: {
-          'Accept': format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Accept': type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Type': 'application/json'
         }
       });
@@ -446,12 +428,12 @@ const JobWork = () => {
 
       // Create blob with proper type
       const blob = new Blob([response.data], { 
-        type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        type: type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
 
       // If blob is empty or invalid
       if (blob.size === 0) {
-        setError(`Failed to export to ${format.toUpperCase()}. Empty response received.`);
+        setError(`Failed to export to ${type.toUpperCase()}. Empty response received.`);
         return;
       }
 
@@ -465,12 +447,12 @@ const JobWork = () => {
       if (!params.startDate) {
         // "As on" report
         const asOnDate = params.endDate ? dayjs(params.endDate as string) : today;
-        fileName = `JOB_WORK_AS_ON_${asOnDate.format('DDMMMYYYY')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        fileName = `JOB_WORK_AS_ON_${asOnDate.format('DDMMMYYYY')}.${type === 'pdf' ? 'pdf' : 'xlsx'}`;
       } else {
         // Date range report
         const startDate = dayjs(params.startDate as string);
         const endDate = dayjs(params.endDate as string);
-        fileName = `JOB_WORK_${startDate.format('DDMMMYYYY')}_TO_${endDate.format('DDMMMYYYY')}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+        fileName = `JOB_WORK_${startDate.format('DDMMMYYYY')}_TO_${endDate.format('DDMMMYYYY')}.${type === 'pdf' ? 'pdf' : 'xlsx'}`;
       }
       
       link.setAttribute('download', fileName);
@@ -486,7 +468,7 @@ const JobWork = () => {
       }, 100);
 
     } catch (error) {
-      console.error(`Error exporting to ${format}:`, error);
+      console.error(`Error exporting to ${type}:`, error);
       if (axios.isAxiosError(error)) {
         // Log detailed error information
         console.error('Axios error details:', {
@@ -502,17 +484,17 @@ const JobWork = () => {
           reader.onload = () => {
             try {
               const jsonResponse = JSON.parse(reader.result as string);
-              setError(jsonResponse.message || `Failed to export to ${format.toUpperCase()}`);
+              setError(jsonResponse.message || `Failed to export to ${type.toUpperCase()}`);
             } catch {
-              setError(`Failed to export to ${format.toUpperCase()}. Server returned an error.`);
+              setError(`Failed to export to ${type.toUpperCase()}. Server returned an error.`);
             }
           };
           reader.readAsText(error.response.data);
         } else {
-          setError(error.response?.data?.message || `Failed to export to ${format.toUpperCase()}. Please try again later.`);
+          setError(error.response?.data?.message || `Failed to export to ${type.toUpperCase()}. Please try again later.`);
         }
       } else {
-        setError(`Failed to export to ${format.toUpperCase()}. Please try again later.`);
+        setError(`Failed to export to ${type.toUpperCase()}. Please try again later.`);
       }
     } finally {
       setLoading(false);
@@ -527,7 +509,7 @@ const JobWork = () => {
   };
 
   const handleResetFilters = () => {
-    // Reset all filters to their default values
+    // Reset all filters to default values
     setFilters({
       startDate: dayjs(),
       endDate: dayjs(),
@@ -538,21 +520,21 @@ const JobWork = () => {
       jobType: '',
     });
     
-    // Reset pagination
+    // Reset pagination to page 1
     setPagination(prev => ({ ...prev, page: 1 }));
     
-    // Clear employee input value and selection
-    setEmployeeInputValue('');
+    // Reset selected employee
     setSelectedEmployee(null);
+    setEmployeeInputValue('');
     
-    // Force re-mount of Autocomplete to clear it completely
+    // Reset any errors
+    setError(null);
+    
+    // Reset autocomplete key to force re-render
     setAutocompleteKey(prev => prev + 1);
     
-    // Clear the results without making a new search
-    setJobWorks([]);
-    
-    // Clear any validation errors
-    setError(null);
+    // Fetch jobs if needed
+    fetchInitialData();
   };
 
   const fetchEmployees = async (searchTerm: string) => {
@@ -882,6 +864,26 @@ const JobWork = () => {
                       <TableCell align="right">₹{jobWork.totalAmount?.toFixed(2)}</TableCell>
                     </TableRow>
                   ))
+                )}
+                {/* Add total row at the bottom if we have job works */}
+                {Array.isArray(jobWorks) && jobWorks.length > 0 && (
+                  <TableRow 
+                    sx={{ 
+                      fontWeight: 'bold',
+                      backgroundColor: '#f5f5f5',
+                      '& td': { 
+                        borderTop: '2px solid #ddd',
+                        fontSize: '1.1rem'
+                      }
+                    }}
+                  >
+                    <TableCell colSpan={8} align="right" sx={{ fontWeight: 'bold' }}>
+                      Total:
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                      ₹{jobWorks.reduce((sum, job) => sum + (job.totalAmount || 0), 0).toFixed(2)}
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
