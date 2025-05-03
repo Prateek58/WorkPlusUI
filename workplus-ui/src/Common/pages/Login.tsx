@@ -21,10 +21,10 @@ import AppleIcon from '@mui/icons-material/Apple';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../store/slices/authSlice';
-import type { RootState } from '../store/store';
-import logoTransparent from '../assets/logo-trans.png';
-import '../styles/background.css';
+import { login } from '../../store/slices/authSlice';
+import type { RootState } from '../../store/store';
+import logoTransparent from '../../assets/logo-trans.png';
+import '../../styles/background.css';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);

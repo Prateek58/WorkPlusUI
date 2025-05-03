@@ -40,7 +40,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import DashboardLayout from '../components/DashboardLayout';
+import DashboardLayout from '../../Common/components/DashboardLayout';
 import jobWorkService from '../services/jobWorkService';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';

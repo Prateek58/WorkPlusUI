@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import DashboardLayout from '../components/DashboardLayout';
+import DashboardLayout from '../../Common/components/DashboardLayout';
 
 const Profile = () => {
   const { user } = useSelector((state: RootState) => state.auth);

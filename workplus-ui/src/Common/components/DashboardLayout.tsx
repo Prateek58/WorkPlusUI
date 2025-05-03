@@ -42,13 +42,13 @@ import {
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { useThemeContext } from '../theme/ThemeProvider';
-import logoTransparent from '../assets/logo-trans.png';
-import logo from '../assets/logo.png';
+import { useThemeContext } from '../../theme/ThemeProvider';
+import logoTransparent from '../../assets/logo-trans.png';
+import logo from '../../assets/logo.png';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+import { logout } from '../../store/slices/authSlice';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type { RootState } from '../store/store';
+import type { RootState } from '../../store/store';
 
 const drawerWidth = 240;
 const collapsedWidth = 64;

@@ -12,7 +12,7 @@ import {
   TextField,
 } from '@mui/material';
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
-import DashboardLayout from '../components/DashboardLayout';
+import DashboardLayout from '../../Common/components/DashboardLayout';
 
 const Help = () => {
   const faqs = [

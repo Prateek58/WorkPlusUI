@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Box, Button, TextField, Typography, useTheme, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { register } from '../store/slices/authSlice';
-import type { RootState } from '../store/store';
-import logoTransparent from '../assets/logo-trans.png';
+import { register } from '../../store/slices/authSlice';
+import type { RootState } from '../../store/store';
+import logoTransparent from '../../assets/logo-trans.png';
 
 const Register = () => {
   const theme = useTheme();

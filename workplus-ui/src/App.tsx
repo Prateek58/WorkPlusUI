@@ -7,14 +7,14 @@ import { Provider } from 'react-redux';
 import { store } from './store/store';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Help from './pages/Help';
-import JobWork from './pages/JobWork';
-import PrivateRoute from './components/PrivateRoute';
+import Login from './Common/pages/Login';
+import Register from './Common/pages/Register';
+import Dashboard from './Common/pages/Dashboard';
+import Profile from './Common/pages/Profile';
+import Settings from './Common/pages/Settings';
+import Help from './Common/pages/Help';
+import JobWork from './Archive/pages/JobWork';
+import PrivateRoute from './Common/components/PrivateRoute';
 import { ThemeContextProvider } from './theme/ThemeProvider';
 
 const App: React.FC = () => {

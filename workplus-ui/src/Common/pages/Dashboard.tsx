@@ -4,7 +4,7 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { useTheme } from '@mui/material/styles';
-import DashboardLayout from '../components/DashboardLayout';
+import DashboardLayout from '../../Common/components/DashboardLayout';
 import { LinearProgress } from '@mui/material';
 
 // Dummy data for charts
