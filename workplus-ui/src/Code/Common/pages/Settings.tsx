@@ -13,7 +13,7 @@ import {
   FormControlLabel,
   Stack,
 } from '@mui/material';
-import { useThemeContext } from '../../theme/ThemeProvider';
+import { useThemeContext } from '../../../theme/ThemeProvider';
 import DashboardLayout from '../components/DashboardLayout';
 
 const Settings = () => {

@@ -10,7 +10,7 @@ import {
   Stack,
 } from '@mui/material';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
+import type { RootState } from '../../store/store';
 import DashboardLayout from '../../Common/components/DashboardLayout';
 
 const Profile = () => {
