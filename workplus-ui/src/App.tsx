@@ -14,6 +14,7 @@ import Profile from './Code/Common/pages/Profile';
 import Settings from './Code/Common/pages/Settings';
 import Help from './Code/Common/pages/Help';
 import JobWork from './Code/Archive/pages/JobWork';
+import WorkPlusJobEntryForm from './Code/WorkPlus/pages/WorkPlusJobEntryForm';
 import PrivateRoute from './Code/Common/components/PrivateRoute';
 import { ThemeContextProvider } from './theme/ThemeProvider';
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
                 <Route path="settings" element={<Settings />} />
                 <Route path="help" element={<Help />} />
                 <Route path="job-work" element={<JobWork />} />
+                <Route path="work-entry" element={<WorkPlusJobEntryForm />} />
               </Route>
             </Routes>
           </Router>

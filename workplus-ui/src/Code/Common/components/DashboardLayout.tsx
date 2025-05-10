@@ -127,6 +127,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { text: 'Job Works', icon: <JobWorkIcon />, path: '/job-work' },
       ]
     },
+    { 
+      text: 'WorkPlus', 
+      icon: <AnalyticsIcon />,
+      id: 'workplus',
+      subItems: [
+        { text: 'Work Entry', icon: <JobWorkIcon />, path: '/work-entry' },
+      ]
+    },
   ];
 
   const drawer = (
@@ -200,9 +208,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
-                sx={{ 
+              <ListItemText
+                primary={item.text}
+                sx={{
                   opacity: open ? 1 : 0,
                   transition: 'opacity 0.2s',
                 }} 
@@ -221,7 +229,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 </Box>
               )}
               {item.subItems && open && (
-                <IconButton 
+                <IconButton
                   size="small" 
                   sx={{ 
                     ml: 'auto',
@@ -268,9 +276,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       }}
                     >
                       <ListItemIcon sx={{ minWidth: 40 }}>{subItem.icon}</ListItemIcon>
-                      <ListItemText 
+                      <ListItemText
                         primary={subItem.text}
-                        sx={{ 
+                        sx={{
                           opacity: open ? 1 : 0,
                           transition: 'opacity 0.2s',
                         }}
@@ -324,7 +332,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 style={{
                   border: 'none',
                   padding: '8px 8px 8px 36px',
-                  borderRadius: 8,
                   backgroundColor: theme.palette.mode === 'light' ? '#F4F5FA' : '#182536',
                   color: theme.palette.text.primary,
                   width: '250px',

@@ -1,218 +1,229 @@
-import { Box, Card, Grid, Stack, Typography, IconButton } from '@mui/material';
+import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
-import { LineChart } from '@mui/x-charts/LineChart';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { useTheme } from '@mui/material/styles';
 import DashboardLayout from '../../Common/components/DashboardLayout';
-import { LinearProgress } from '@mui/material';
+import dayjs from 'dayjs';
 
-// Dummy data for charts
-const monthlyData = [
-  { month: 'Jan', value: 15000 },
-  { month: 'Feb', value: 18000 },
-  { month: 'Mar', value: 14000 },
-  { month: 'Apr', value: 16500 },
-  { month: 'May', value: 19000 },
-  { month: 'Jun', value: 21845 },
+// Dummy data
+const dummyJobWorks = [
+  { entryDate: dayjs().format('YYYY-MM-DD'), workName: 'Cutting', employeeName: 'Rahul', qtyHours: 8, totalAmount: 1200 },
+  { entryDate: dayjs().format('YYYY-MM-DD'), workName: 'Stitching', employeeName: 'Priya', qtyHours: 6, totalAmount: 900 },
+  { entryDate: dayjs().format('YYYY-MM-DD'), workName: 'Packing', employeeName: 'Amit', qtyHours: 4, totalAmount: 600 },
+  { entryDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'), workName: 'Cutting', employeeName: 'Rahul', qtyHours: 8, totalAmount: 1200 },
+  { entryDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'), workName: 'Stitching', employeeName: 'Priya', qtyHours: 8, totalAmount: 1200 },
+  { entryDate: dayjs().subtract(2, 'day').format('YYYY-MM-DD'), workName: 'Packing', employeeName: 'Amit', qtyHours: 8, totalAmount: 1200 },
 ];
 
-const revenueData = [
-  { month: 'Jan', earning: 4000, expense: 2400 },
-  { month: 'Feb', earning: 5000, expense: 3000 },
-  { month: 'Mar', earning: 6000, expense: 4000 },
-  { month: 'Apr', earning: 4500, expense: 2800 },
-  { month: 'May', earning: 5500, expense: 3200 },
-  { month: 'Jun', earning: 6500, expense: 3800 },
+const dummyWorkers = [
+  { name: 'Rahul', present: true, totalJobs: 45, totalEarnings: 54000 },
+  { name: 'Priya', present: true, totalJobs: 38, totalEarnings: 45600 },
+  { name: 'Amit', present: false, totalJobs: 42, totalEarnings: 50400 },
+  { name: 'Sneha', present: true, totalJobs: 35, totalEarnings: 42000 },
+  { name: 'Rajesh', present: false, totalJobs: 40, totalEarnings: 48000 },
 ];
 
-const salesData = [
-  { id: 0, value: 12150, label: 'Apparel' },
-  { id: 1, value: 24900, label: 'Electronics' },
-  { id: 2, value: 12750, label: 'FMCG' },
-  { id: 3, value: 50200, label: 'Other Sales' },
+const dummyMonthlyData = [
+  { month: 'Jan 2024', amount: 120000, hours: 960, jobs: 80 },
+  { month: 'Feb 2024', amount: 135000, hours: 1080, jobs: 90 },
+  { month: 'Mar 2024', amount: 150000, hours: 1200, jobs: 100 },
+  { month: 'Apr 2024', amount: 165000, hours: 1320, jobs: 110 },
+  { month: 'May 2024', amount: 180000, hours: 1440, jobs: 120 },
+  { month: 'Jun 2024', amount: 195000, hours: 1560, jobs: 130 },
+];
+
+const dummyJobDistribution = [
+  { id: 1, value: 40, label: 'Cutting' },
+  { id: 2, value: 30, label: 'Stitching' },
+  { id: 3, value: 20, label: 'Packing' },
+  { id: 4, value: 10, label: 'Quality Check' },
 ];
 
 const Dashboard = () => {
   const theme = useTheme();
 
+  // Calculate today's statistics
+  const today = dayjs().format('YYYY-MM-DD');
+  const todayEntries = dummyJobWorks.filter(entry => entry.entryDate === today);
+  const todayAmount = todayEntries.reduce((sum, entry) => sum + entry.totalAmount, 0);
+  const todayHours = todayEntries.reduce((sum, entry) => sum + entry.qtyHours, 0);
+  
+  // Calculate worker statistics
+  const presentWorkers = dummyWorkers.filter(w => w.present).length;
+  const absentWorkers = dummyWorkers.filter(w => !w.present).length;
+  const totalWorkers = dummyWorkers.length;
+  
+  // Calculate total statistics
+  const totalJobs = dummyWorkers.reduce((sum, w) => sum + w.totalJobs, 0);
+  const totalEarnings = dummyWorkers.reduce((sum, w) => sum + w.totalEarnings, 0);
+  const totalHours = dummyMonthlyData.reduce((sum, m) => sum + m.hours, 0);
+
   return (
     <DashboardLayout>
-      <Grid container spacing={3}>
+      <Typography variant="h4" sx={{ mb: 3, mt: 9 }}>
+        Dashboard WorkPlus
+      </Typography>
+
+      <Grid container spacing={2}>
         {/* Stats Cards */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Ratings
+        <Grid item xs={12} md={3}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              Today's Jobs
             </Typography>
-            <Typography variant="h3" color="primary.main">
-              13k
+            <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
+              {todayEntries.length}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                +15.6%
+                ₹{todayAmount.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Year of 2025
+                Today's Earnings
               </Typography>
             </Box>
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Sessions
+        <Grid item xs={12} md={3}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              Worker Attendance
             </Typography>
-            <Typography variant="h3">
-              24.5k
+            <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
+              {presentWorkers}/{totalWorkers}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" color="error.main" sx={{ mr: 1 }}>
-                -20%
+                {absentWorkers} Absent
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Last Week
+                Today
               </Typography>
             </Box>
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Transactions
+        <Grid item xs={12} md={3}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              Total Jobs
             </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Sales
-                </Typography>
-                <Typography variant="h6">
-                  245k
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Users
-                </Typography>
-                <Typography variant="h6">
-                  12.5k
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Product
-                </Typography>
-                <Typography variant="h6">
-                  1.54k
-                </Typography>
-              </Box>
+            <Typography variant="h4" sx={{ mb: 1 }}>
+              {totalJobs}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
+                ₹{totalEarnings.toLocaleString()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Earnings
+              </Typography>
             </Box>
-            <LinearProgress variant="determinate" value={75} sx={{ height: 8, borderRadius: 4 }} />
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card sx={{ p: 2, height: '100%' }}>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              Total Hours
+            </Typography>
+            <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
+              {totalHours}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
+                {todayHours} Hours
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Today's Hours
+              </Typography>
+            </Box>
           </Card>
         </Grid>
 
         {/* Charts */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3 }}>
+        <Grid item xs={12} md={8}>
+          <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Total Sales</Typography>
+              <Typography variant="subtitle1">Monthly Performance</Typography>
               <IconButton size="small">
                 <MoreVertIcon />
               </IconButton>
             </Box>
-            <Typography variant="h4" sx={{ mb: 2 }}>$21,845</Typography>
-            <Box sx={{ width: '100%', height: 300 }}>
-              <LineChart
-                series={[
-                  {
-                    data: monthlyData.map(item => item.value),
-                    area: true,
-                    color: theme.palette.primary.main,
-                  },
-                ]}
-                xAxis={[{
-                  scaleType: 'point',
-                  data: monthlyData.map(item => item.month),
-                }]}
-                height={300}
-              />
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Revenue Report</Typography>
-              <IconButton size="small">
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-            <Box sx={{ width: '100%', height: 300 }}>
+            <Box sx={{ width: '100%', height: 250 }}>
               <BarChart
                 series={[
                   {
-                    data: revenueData.map(item => item.earning),
-                    label: 'Earning',
+                    data: dummyMonthlyData.map(item => item.amount),
+                    label: 'Earnings',
                     color: theme.palette.primary.main,
                   },
                   {
-                    data: revenueData.map(item => item.expense),
-                    label: 'Expense',
-                    color: theme.palette.mode === 'dark' ? '#666' : '#ddd',
-                  },
+                    data: dummyMonthlyData.map(item => item.hours),
+                    label: 'Hours',
+                    color: theme.palette.success.main,
+                  }
                 ]}
                 xAxis={[{
                   scaleType: 'band',
-                  data: revenueData.map(item => item.month),
+                  data: dummyMonthlyData.map(item => item.month),
                 }]}
-                height={300}
+                height={250}
               />
             </Box>
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3 }}>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Sales Overview</Typography>
+              <Typography variant="subtitle1">Top Performers</Typography>
               <IconButton size="small">
                 <MoreVertIcon />
               </IconButton>
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Box sx={{ width: '60%', height: 300 }}>
-                <PieChart
-                  series={[
-                    {
-                      data: salesData,
-                      highlightScope: { faded: 'global', highlighted: 'item' },
-                      faded: { innerRadius: 30, additionalRadius: -30 },
-                    },
-                  ]}
-                  height={300}
-                />
-              </Box>
-              <Box sx={{ width: '35%' }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Number of Sales
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  $86,400
-                </Typography>
-                {salesData.map((item) => (
-                  <Box key={item.label} sx={{ mt: 2 }}>
-                    <Typography variant="body2" gutterBottom>
-                      {item.label}
+            <Box sx={{ mt: 1 }}>
+              {dummyWorkers
+                .sort((a, b) => b.totalEarnings - a.totalEarnings)
+                .slice(0, 3)
+                .map((worker, index) => (
+                  <Box key={worker.name} sx={{ mb: 1.5 }}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {index + 1}. {worker.name}
                     </Typography>
                     <Typography variant="h6">
-                      ${item.value.toLocaleString()}
+                      ₹{worker.totalEarnings.toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2" color="success.main">
+                      {worker.totalJobs} Jobs
                     </Typography>
                   </Box>
                 ))}
-              </Box>
+            </Box>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle1">Job Distribution</Typography>
+              <IconButton size="small">
+                <MoreVertIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ width: '100%', height: 250 }}>
+              <PieChart
+                series={[
+                  {
+                    data: dummyJobDistribution,
+                    highlightScope: { faded: 'global', highlighted: 'item' },
+                    faded: { innerRadius: 30, additionalRadius: -30 },
+                  },
+                ]}
+                height={250}
+              />
             </Box>
           </Card>
         </Grid>

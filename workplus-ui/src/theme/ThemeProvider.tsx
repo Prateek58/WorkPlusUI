@@ -53,7 +53,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
               }
             : {
                 primary: {
-                  main: '#1976d2',
+                  main: '#261c68',
                 },
                 secondary: {
                   main: '#dc004e',
@@ -92,7 +92,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
               root: {
                 padding: '6px 16px',
                 height: '32px',
-                borderRadius: 4,
+            
               },
               contained: {
                 boxShadow: 'none',
@@ -174,7 +174,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiCard: {
             styleOverrides: {
               root: {
-                borderRadius: 8,
+                
                 padding: '1rem',
                 boxShadow: mode === 'light' 
                   ? '0px 2px 8px rgba(0, 0, 0, 0.05)'
@@ -223,7 +223,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiMenu: {
             styleOverrides: {
               paper: {
-                borderRadius: 4,
+               
                 boxShadow: mode === 'light'
                   ? '0px 2px 8px rgba(0, 0, 0, 0.1)'
                   : '0px 2px 8px rgba(0, 0, 0, 0.25)',

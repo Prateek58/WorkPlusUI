@@ -32,7 +32,7 @@ const Login = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [credentials, setCredentials] = useState({
-    username: 'admintest',
+    username: 'admintest2',
     //password: 'Admin123',
     password: 'Asdf@#1234_323'
   });
