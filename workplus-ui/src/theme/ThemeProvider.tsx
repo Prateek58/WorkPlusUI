@@ -53,7 +53,8 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
               }
             : {
                 primary: {
-                  main: '#261c68',
+                  //main: '#261c68',
+                  main: '#422266',
                 },
                 secondary: {
                   main: '#dc004e',

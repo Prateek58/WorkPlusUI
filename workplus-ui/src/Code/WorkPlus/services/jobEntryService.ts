@@ -44,9 +44,15 @@ export interface JobEntry {
   hoursTaken?: number | null;
   ratePerJob: number;
   expectedHours?: number | null;
+  productiveHours?: number | null;
+  extraHours?: number | null;
+  underperformanceHours?: number | null;
   incentiveAmount?: number | null;
+  totalAmount?: number | null;
   remarks?: string | null;
+  isFinalized?: boolean | null;
   createdBy?: number;
+  createdAt?: string | null;
 }
 
 export interface JobEntryResponse {
@@ -60,6 +66,21 @@ export interface JobEntryResponse {
   incentiveAmount?: number;
   totalAmount?: number;
   createdAt?: string;
+}
+
+// Simplified job entry DTO that matches the backend CreateJobEntryDTO
+export interface SimpleJobEntry {
+  jobId: number;
+  entryType: 'Individual' | 'Group';
+  workerId?: number | null;
+  groupId?: number | null;
+  isPostLunch: boolean;
+  itemsCompleted?: number | null;
+  hoursTaken?: number | null;
+  ratePerJob: number;
+  expectedHours?: number | null;
+  remarks?: string | null;
+  entryDate?: string | null;
 }
 
 // Add auth token to requests
@@ -141,18 +162,43 @@ const getMasterData = async (): Promise<JobEntryMasterData> => {
 
 const saveJobEntry = async (jobEntry: JobEntry): Promise<JobEntryResponse> => {
   try {
-    // Convert data to PascalCase for backend
-    const pascalCaseData = convertToPascalCase(jobEntry);
-    console.log('Sending job entry data:', pascalCaseData);
+    // Create a simplified object for the API
+    const simpleJobEntry: SimpleJobEntry = {
+      jobId: jobEntry.jobId,
+      entryType: jobEntry.entryType,
+      workerId: jobEntry.workerId,
+      groupId: jobEntry.groupId,
+      isPostLunch: jobEntry.isPostLunch,
+      itemsCompleted: jobEntry.itemsCompleted,
+      hoursTaken: jobEntry.hoursTaken,
+      ratePerJob: jobEntry.ratePerJob,
+      expectedHours: jobEntry.expectedHours,
+      remarks: jobEntry.remarks,
+      entryDate: jobEntry.createdAt
+    };
+
+    console.log('Sending job entry data:', simpleJobEntry);
     
-    const response = await axios.post(`${API_URL}/JobEntry`, pascalCaseData, {
-      headers: authHeader()
+    // Use the main endpoint for job entry creation
+    const response = await axios.post(`${API_URL}/JobEntry`, simpleJobEntry, {
+      headers: {
+        ...authHeader(),
+        'Content-Type': 'application/json'
+      }
     });
     
     console.log('Job entry save response:', response.data);
     return convertToCamelCase(response.data);
   } catch (error) {
     console.error('Error saving job entry:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('API Error details:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: error.response.headers
+      });
+    }
     throw error;
   }
 };

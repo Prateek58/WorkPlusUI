@@ -34,6 +34,15 @@ import DashboardLayout from '../../Common/components/DashboardLayout';
 import dayjs from 'dayjs';
 import jobEntryService from '../services/jobEntryService';
 import type { Worker, Job, JobGroup, JobEntryResponse } from '../services/jobEntryService';
+import { 
+  formContainerStyles, 
+  sectionTitleStyles, 
+  alertStyles, 
+  buttonStyles, 
+  formFieldStyles,
+  centeredContentStyles,
+  tableCellHeaderStyles
+} from '../../../theme/styleUtils';
 
 // Type for form data
 interface FormData {
@@ -230,49 +239,65 @@ const WorkPlusJobEntryForm: React.FC = () => {
         throw new Error('Please enter the actual output');
       }
       
-      const expected = parseInt(formData.expectedOutput) || 0;
-      const actual = parseInt(formData.actualOutput) || 0;
+      const expected = parseFloat(formData.expectedOutput) || 0;
+      const actual = parseFloat(formData.actualOutput) || 0;
       const rate = parseFloat(formData.rate) || 0;
       
-      // Create job entry object for API
+      // Format the date correctly for the backend (ISO format)
+      const formattedDate = formData.date ? formData.date.toISOString() : null;
+      
+      // Create a minimal job entry object with just the required fields
       const jobEntry = {
-        jobId: formData.jobId as number,
+        jobId: Number(formData.jobId),
         entryType: formData.entryType,
-        workerId: formData.entryType === 'Individual' ? formData.workerId as number : null,
-        groupId: formData.entryType === 'Group' ? formData.groupId as number : null,
-        isPostLunch: formData.shift === 'Afternoon' || formData.shift === 'Evening', // Is post lunch determination
-        hoursTaken: actual, // For hourly jobs
-        itemsCompleted: selectedJob.ratePerItem ? actual : null, // For item-based jobs
+        // Only one of these will be set based on entry type
+        workerId: formData.entryType === 'Individual' ? Number(formData.workerId) : null,
+        groupId: formData.entryType === 'Group' ? Number(formData.groupId) : null,
+        isPostLunch: formData.shift === 'Afternoon' || formData.shift === 'Evening',
+        
+        // Only one of these will have a value depending on job type
+        hoursTaken: selectedJob.ratePerHour ? actual : null, 
+        itemsCompleted: selectedJob.ratePerItem ? Math.round(actual) : null,
+        
         ratePerJob: rate,
         expectedHours: expected,
-        remarks: formData.remarks
+        remarks: formData.remarks,
+        createdAt: formattedDate // Add the formatted date
       };
       
-      console.log('Saving job entry:', jobEntry);
+      console.log('Created job entry data:', jobEntry);
       
-      // Save to API
-      await jobEntryService.saveJobEntry(jobEntry);
+      try {
+        // Save to API - the service will add the missing required fields
+        await jobEntryService.saveJobEntry(jobEntry);
+        
+        // Refresh the records list
+        await fetchSavedRecords();
+        
+        // Reset form after successful save
+        setFormData({
+          ...formData,
+          workerId: '',
+          jobId: '',
+          expectedOutput: '',
+          rate: '',
+          actualOutput: '',
+          remarks: ''
+        });
+        
+        setSuccess('Work record saved successfully!');
+      } catch (err) {
+        console.error('Error response from API:', err);
+        setError(typeof err === 'object' && err !== null && 'message' in err 
+          ? (err as Error).message 
+          : 'Failed to save work record. Please check browser console for details.');
+      }
       
-      // Refresh the records list
-      await fetchSavedRecords();
-      
-      // Reset form after successful save
-      setFormData({
-        ...formData,
-        workerId: '',
-        jobId: '',
-        expectedOutput: '',
-        rate: '',
-        actualOutput: '',
-        remarks: ''
-      });
-      
-      setSuccess('Work record saved successfully!');
     } catch (err) {
-      console.error('Error saving record:', err);
+      console.error('Error in form validation:', err);
       setError(typeof err === 'object' && err !== null && 'message' in err 
         ? (err as Error).message 
-        : 'Failed to save work record. Please try again.');
+        : 'Failed to validate form. Please check all fields and try again.');
     } finally {
       setLoading(false);
     }
@@ -320,12 +345,11 @@ const WorkPlusJobEntryForm: React.FC = () => {
   return (
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3, mt: 4 }}>
-      Work Recording
+        <Typography variant="h4" sx={sectionTitleStyles(theme)}>
+          Work Recording
         </Typography>
-
         
-        <Paper sx={{ p: 3, mb: 4 }}>
+        <Paper sx={formContainerStyles(theme)}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <ToggleButtonGroup
@@ -391,6 +415,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                       fullWidth
                       label="Select Worker"
                       placeholder="Search by name"
+                      sx={formFieldStyles(theme)}
                     />
                   )}
                   loading={loading}
@@ -413,6 +438,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                     value={formData.groupId}
                     label="Select Group"
                     onChange={(e) => handleInputChange('groupId', e.target.value)}
+                    sx={formFieldStyles(theme)}
                   >
                     {jobGroups.map((group) => (
                       <MenuItem key={group.groupId} value={group.groupId}>
@@ -433,6 +459,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                   value={formData.jobId}
                   label="Select Job"
                   onChange={(e) => handleJobChange(e.target.value as number)}
+                  sx={formFieldStyles(theme)}
                 >
                   {jobs.map((job) => (
                     <MenuItem key={job.jobId} value={job.jobId}>
@@ -455,6 +482,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 }}
                 disabled={!!formData.jobId}
                 helperText={!!formData.jobId ? "Auto-filled from job data" : ""}
+                sx={formFieldStyles(theme)}
               />
             </Grid>
             
@@ -470,6 +498,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 }}
                 disabled={!!formData.jobId}
                 helperText={!!formData.jobId ? "Auto-filled from job data" : ""}
+                sx={formFieldStyles(theme)}
               />
             </Grid>
             
@@ -480,6 +509,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 type="number"
                 value={formData.actualOutput}
                 onChange={(e) => handleInputChange('actualOutput', e.target.value)}
+                sx={formFieldStyles(theme)}
               />
             </Grid>
 
@@ -501,6 +531,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                   }}
                   disabled
                   helperText="Current incentive rate and type"
+                  sx={formFieldStyles(theme)}
                 />
               </Grid>
             )}
@@ -514,6 +545,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                   value={formData.shift}
                   label="Shift"
                   onChange={(e) => handleInputChange('shift', e.target.value)}
+                  sx={formFieldStyles(theme)}
                 >
                   <MenuItem value="Morning">Morning</MenuItem>
                   <MenuItem value="Afternoon">Afternoon</MenuItem>
@@ -528,20 +560,29 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 label="Remarks"
                 multiline
                 rows={3}
+                variant="outlined"
                 value={formData.remarks}
                 onChange={(e) => handleInputChange('remarks', e.target.value)}
+                sx={{
+                  mt: 1,
+                  '& .MuiOutlinedInput-root': {
+                    '& textarea': {
+                      padding: '12px'
+                    }
+                  }
+                }}
               />
             </Grid>
             
             <Grid item xs={12}>
               {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert severity="error" sx={alertStyles(theme)}>
                   {error}
                 </Alert>
               )}
               
               {success && (
-                <Alert severity="success" sx={{ mb: 2 }}>
+                <Alert severity="success" sx={alertStyles(theme)}>
                   {success}
                 </Alert>
               )}
@@ -552,7 +593,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 disabled={loading}
                 onClick={handleSaveRecord}
-                sx={{ mt: 2 }}
+                sx={{ ...buttonStyles(theme), mt: 2 }}
               >
                 Save Work Record
               </Button>
@@ -561,13 +602,13 @@ const WorkPlusJobEntryForm: React.FC = () => {
         </Paper>
         
         {/* Saved work records table */}
-        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+        <Typography variant="h5" sx={{ ...sectionTitleStyles(theme), mt: 4, mb: 2 }}>
           Saved Work Records
         </Typography>
         
-        <Paper sx={{ p: 2 }}>
+        <Paper sx={formContainerStyles(theme)}>
           {loadingRecords ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <Box sx={centeredContentStyles}>
               <CircularProgress />
             </Box>
           ) : savedRecords.length > 0 ? (
@@ -575,15 +616,15 @@ const WorkPlusJobEntryForm: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Worker/Group</TableCell>
-                    <TableCell>Job</TableCell>
-                    <TableCell>Expected</TableCell>
-                    <TableCell>Actual</TableCell>
-                    <TableCell>Bonus</TableCell>
-                    <TableCell>Total</TableCell>
-                    <TableCell>Actions</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>ID</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Date</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Worker/Group</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Job</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Expected</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Actual</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Bonus</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Total</TableCell>
+                    <TableCell sx={tableCellHeaderStyles(theme)}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -614,7 +655,7 @@ const WorkPlusJobEntryForm: React.FC = () => {
               </Table>
             </TableContainer>
           ) : (
-            <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               No saved records found.
             </Typography>
           )}

@@ -5,6 +5,12 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { useTheme } from '@mui/material/styles';
 import DashboardLayout from '../../Common/components/DashboardLayout';
 import dayjs from 'dayjs';
+import { 
+  cardStyles, 
+  sectionTitleStyles, 
+  flexContainerStyles, 
+  centeredContentStyles 
+} from '../../../theme/styleUtils';
 
 // Dummy data
 const dummyJobWorks = [
@@ -59,23 +65,36 @@ const Dashboard = () => {
   const totalEarnings = dummyWorkers.reduce((sum, w) => sum + w.totalEarnings, 0);
   const totalHours = dummyMonthlyData.reduce((sum, m) => sum + m.hours, 0);
 
+  // Chart container styles
+  const chartContainerStyles = {
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    mb: 2
+  };
+  
+  const chartBoxStyles = {
+    width: '100%', 
+    height: 250
+  };
+
   return (
     <DashboardLayout>
-      <Typography variant="h4" sx={{ mb: 3, mt: 9 }}>
+      <Typography variant="h4" sx={{ ...sectionTitleStyles(theme), mt: 9 }}>
         Dashboard WorkPlus
       </Typography>
 
       <Grid container spacing={2}>
         {/* Stats Cards */}
         <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
+          <Card sx={cardStyles(theme)}>
             <Typography variant="subtitle1" color="text.secondary" gutterBottom>
               Today's Jobs
             </Typography>
             <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
               {todayEntries.length}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
                 ₹{todayAmount.toLocaleString()}
               </Typography>
@@ -87,14 +106,14 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
+          <Card sx={cardStyles(theme)}>
             <Typography variant="subtitle1" color="text.secondary" gutterBottom>
               Worker Attendance
             </Typography>
             <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
               {presentWorkers}/{totalWorkers}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="error.main" sx={{ mr: 1 }}>
                 {absentWorkers} Absent
               </Typography>
@@ -106,14 +125,14 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
+          <Card sx={cardStyles(theme)}>
             <Typography variant="subtitle1" color="text.secondary" gutterBottom>
               Total Jobs
             </Typography>
             <Typography variant="h4" sx={{ mb: 1 }}>
               {totalJobs}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
                 ₹{totalEarnings.toLocaleString()}
               </Typography>
@@ -125,14 +144,14 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <Card sx={{ p: 2, height: '100%' }}>
+          <Card sx={cardStyles(theme)}>
             <Typography variant="subtitle1" color="text.secondary" gutterBottom>
               Total Hours
             </Typography>
             <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
               {totalHours}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
                 {todayHours} Hours
               </Typography>
@@ -145,14 +164,14 @@ const Dashboard = () => {
 
         {/* Charts */}
         <Grid item xs={12} md={8}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Card sx={cardStyles(theme)}>
+            <Box sx={chartContainerStyles}>
               <Typography variant="subtitle1">Monthly Performance</Typography>
               <IconButton size="small">
                 <MoreVertIcon />
               </IconButton>
             </Box>
-            <Box sx={{ width: '100%', height: 250 }}>
+            <Box sx={chartBoxStyles}>
               <BarChart
                 series={[
                   {
@@ -177,8 +196,8 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card sx={{ p: 2, height: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Card sx={cardStyles(theme)}>
+            <Box sx={chartContainerStyles}>
               <Typography variant="subtitle1">Top Performers</Typography>
               <IconButton size="small">
                 <MoreVertIcon />
@@ -206,14 +225,14 @@ const Dashboard = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <Card sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Card sx={cardStyles(theme)}>
+            <Box sx={chartContainerStyles}>
               <Typography variant="subtitle1">Job Distribution</Typography>
               <IconButton size="small">
                 <MoreVertIcon />
               </IconButton>
             </Box>
-            <Box sx={{ width: '100%', height: 250 }}>
+            <Box sx={chartBoxStyles}>
               <PieChart
                 series={[
                   {

@@ -9,6 +9,7 @@ import {
   Stack,
   CircularProgress,
   Alert,
+  useTheme,
 } from '@mui/material';
 import {
   Visibility,
@@ -25,8 +26,63 @@ import { login } from '../../../store/slices/authSlice';
 import type { RootState } from '../../../store/store';
 import logoTransparent from '../../../assets/logo-trans.png';
 import '../../../styles/background.css';
+import { 
+  loginFormStyles, 
+  formFieldStyles, 
+  alertStyles, 
+  buttonStyles, 
+  socialButtonStyles 
+} from '../../../theme/styleUtils';
+
+// Light mode specific form field styles
+const lightFormFieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: 8,
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: 'rgba(0, 0, 0, 0.23)',
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#1976d2', // Primary color
+      borderWidth: 1,
+    },
+    '& .MuiOutlinedInput-input': {
+      color: 'rgba(0, 0, 0, 0.87)', // Dark text for light mode
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: 'rgba(0, 0, 0, 0.6)',
+    '&.Mui-focused': {
+      color: '#1976d2', // Primary color
+    },
+  },
+  '& .MuiSvgIcon-root': {
+    color: 'rgba(0, 0, 0, 0.54)', // Icon color for light mode
+  },
+};
+
+// Light mode specific alert styles
+const lightAlertStyles = {
+  mb: 2,
+  borderRadius: 8,
+};
+
+// Light mode specific button styles
+const lightButtonStyles = {
+  textTransform: 'none',
+  fontWeight: 500,
+  boxShadow: 'none',
+  backgroundColor: '#1976d2', // Primary blue color
+  color: '#ffffff',
+  '&:hover': {
+    backgroundColor: '#1565c0', // Darker blue on hover
+    boxShadow: 'none',
+  },
+  py: 1,
+  height: '45px',
+};
 
 const Login = () => {
+  const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -75,16 +131,7 @@ const Login = () => {
           component="form"
           onSubmit={handleSubmit}
           autoComplete="off"
-          sx={{
-            width: '100%',
-            maxWidth: '440px',
-            mx: 'auto',
-            p: 4,
-            bgcolor: '#ffffff',
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            backdropFilter: 'blur(10px)',
-          }}
+          sx={loginFormStyles(theme)}
         >
           {/* Logo */}
           <Box sx={{ mb: 8, textAlign: 'center' }}>
@@ -102,16 +149,16 @@ const Login = () => {
 
           {/* Form Header */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="body1" sx={{ color: '#666666' }} gutterBottom>
+            <Typography variant="body1" color="text.secondary" gutterBottom>
               Welcome back
             </Typography>
-            <Typography variant="h4" fontWeight="bold" sx={{ color: '#1a1a1a' }}>
+            <Typography variant="h4" fontWeight="bold" color="text.primary">
               Login to WorkPlus
             </Typography>
           </Box>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={lightAlertStyles}>
               {error}
             </Alert>
           )}
@@ -128,41 +175,11 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <EmailIcon sx={{ color: '#666666' }} />
+                    <EmailIcon color="action" />
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  bgcolor: '#ffffff',
-                  color: '#1a1a1a',
-                  height: '36px',
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#e0e0e0',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#1976d2',
-                    borderWidth: 1,
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: '#666666',
-                  transform: 'translate(14px, 8px) scale(1)',
-                  '&.Mui-focused': {
-                    color: '#1976d2',
-                    transform: 'translate(14px, -9px) scale(0.75)',
-                  },
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#e0e0e0',
-                },
-                '& .MuiOutlinedInput-input:-webkit-autofill': {
-                  '-webkit-box-shadow': '0 0 0 100px #ffffff inset !important',
-                  '-webkit-text-fill-color': '#1a1a1a !important',
-                  'caret-color': '#1a1a1a !important',
-                },
-              }}
+              sx={lightFormFieldStyles}
             />
 
             <TextField
@@ -177,7 +194,7 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <LockIcon sx={{ color: '#666666' }} />
+                    <LockIcon color="action" />
                   </InputAdornment>
                 ),
                 endAdornment: (
@@ -185,44 +202,14 @@ const Login = () => {
                     <IconButton
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
-                      sx={{ color: '#666666' }}
+                      color="default"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  bgcolor: '#ffffff',
-                  color: '#1a1a1a',
-                  height: '36px',
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#e0e0e0',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#1976d2',
-                    borderWidth: 1,
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: '#666666',
-                  transform: 'translate(14px, 8px) scale(1)',
-                  '&.Mui-focused': {
-                    color: '#1976d2',
-                    transform: 'translate(14px, -9px) scale(0.75)',
-                  },
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#e0e0e0',
-                },
-                '& .MuiOutlinedInput-input:-webkit-autofill': {
-                  '-webkit-box-shadow': '0 0 0 100px #ffffff inset !important',
-                  '-webkit-text-fill-color': '#1a1a1a !important',
-                  'caret-color': '#1a1a1a !important',
-                },
-              }}
+              sx={lightFormFieldStyles}
             />
 
             <Button
@@ -231,24 +218,14 @@ const Login = () => {
               variant="contained"
               size="medium"
               disabled={loading}
-              sx={{
-                borderRadius: 2,
-                py: 1,
-                textTransform: 'none',
-                fontSize: '0.875rem',
-                height: '36px',
-                bgcolor: '#1976d2',
-                '&:hover': {
-                  bgcolor: '#1565c0',
-                },
-              }}
+              sx={lightButtonStyles}
             >
               {loading ? <CircularProgress size={20} /> : 'Sign In'}
             </Button>
 
             {/* Social Login Section */}
             <Box sx={{ textAlign: 'center', my: 2 }}>
-              <Typography variant="body2" sx={{ color: '#666666', mb: 2 }}>
+              <Typography variant="body2" sx={{ mb: 2, color: 'rgba(0, 0, 0, 0.6)' }}>
                 or sign in with
               </Typography>
               <Stack
@@ -256,46 +233,40 @@ const Login = () => {
                 spacing={2}
                 justifyContent="center"
               >
-                <IconButton 
-                  sx={{ 
-                    border: '1px solid #e0e0e0', 
-                    borderRadius: 2,
-                    p: 1.5,
-                    color: '#4267B2',
-                    bgcolor: '#ffffff',
-                    '&:hover': {
-                      bgcolor: '#f5f5f5',
-                    },
-                  }}
-                >
+                <IconButton sx={{ 
+                  border: '1px solid rgba(0, 0, 0, 0.12)',
+                  borderRadius: 1,
+                  p: 1.5,
+                  bgcolor: '#ffffff',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                  color: '#4267B2' 
+                }}>
                   <FacebookIcon />
                 </IconButton>
-                <IconButton 
-                  sx={{ 
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 2,
-                    p: 1.5,
-                    color: '#DB4437',
-                    bgcolor: '#ffffff',
-                    '&:hover': {
-                      bgcolor: '#f5f5f5',
-                    },
-                  }}
-                >
+                <IconButton sx={{ 
+                  border: '1px solid rgba(0, 0, 0, 0.12)',
+                  borderRadius: 1,
+                  p: 1.5,
+                  bgcolor: '#ffffff',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                  color: '#DB4437' 
+                }}>
                   <GoogleIcon />
                 </IconButton>
-                <IconButton 
-                  sx={{ 
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 2,
-                    p: 1.5,
-                    color: '#000000',
-                    bgcolor: '#ffffff',
-                    '&:hover': {
-                      bgcolor: '#f5f5f5',
-                    },
-                  }}
-                >
+                <IconButton sx={{ 
+                  border: '1px solid rgba(0, 0, 0, 0.12)',
+                  borderRadius: 1,
+                  p: 1.5,
+                  bgcolor: '#ffffff',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                  color: '#000000' 
+                }}>
                   <AppleIcon />
                 </IconButton>
               </Stack>
@@ -303,18 +274,18 @@ const Login = () => {
 
             {/* Sign Up Link */}
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: '#666666' }}>
+              <Typography variant="body2" sx={{ color: 'rgba(0, 0, 0, 0.6)' }}>
                 Don't have an account?{' '}
                 <Typography
                   component="span"
                   variant="body2"
                   sx={{ 
-                    color: '#1976d2',
+                    color: '#1976d2', // Primary blue color
                     cursor: 'pointer',
                     fontWeight: 500,
                     '&:hover': { 
                       textDecoration: 'underline',
-                      color: '#1565c0',
+                      color: '#1565c0', // Darker blue on hover
                     }
                   }}
                   onClick={() => navigate('/register')}
