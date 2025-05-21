@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { API_URL } from '../config';
 
-// Set base URL and headers
-const API_URL = 'https://localhost:7160/api';
+// Set headers
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Types
@@ -73,6 +73,11 @@ export interface JobEntryResponse {
   isPostLunch?: boolean;
   remarks?: string;
   createdAt?: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  totalCount: number;
 }
 
 // Simplified job entry DTO that matches the backend CreateJobEntryDTO
@@ -237,6 +242,28 @@ const getJobEntries = async (): Promise<JobEntryResponse[]> => {
   }
 };
 
+const getPaginatedJobEntries = async (pageNumber: number, pageSize: number): Promise<PaginatedResponse<JobEntryResponse>> => {
+  try {
+    const response = await axios.get(`${API_URL}/JobEntry/paginated`, {
+      params: { pageNumber, pageSize },
+      headers: authHeader()
+    });
+    
+    const transformedData = convertToCamelCase(response.data);
+    return transformedData;
+  } catch (error) {
+    console.error('Error fetching paginated job entries:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('API Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+    }
+    throw error;
+  }
+};
+
 const deleteJobEntry = async (entryId: number): Promise<void> => {
   try {
     await axios.delete(`${API_URL}/JobEntry/${entryId}`, {
@@ -265,6 +292,7 @@ const jobEntryService = {
   getMasterData,
   saveJobEntry,
   getJobEntries,
+  getPaginatedJobEntries,
   deleteJobEntry,
   getWorkers
 };

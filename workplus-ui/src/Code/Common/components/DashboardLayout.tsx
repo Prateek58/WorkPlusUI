@@ -73,7 +73,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [open, setOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openSubMenu, setOpenSubMenu] = useState<string | null>('legacy-reports');
+  const [openSubMenu, setOpenSubMenu] = useState<string[]>(['legacy-reports', 'workplus']);
   const theme = useTheme();
   const { toggleColorMode, mode } = useThemeContext();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -91,7 +91,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   };
 
   const handleSubMenuClick = (menuId: string) => {
-    setOpenSubMenu(openSubMenu === menuId ? null : menuId);
+    setOpenSubMenu(prev => 
+      prev.includes(menuId) 
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
   };
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -133,6 +137,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       id: 'workplus',
       subItems: [
         { text: 'Work Entry', icon: <JobWorkIcon />, path: '/work-entry' },
+        { text: 'Masters', icon: <SettingsIcon />, path: '/masters' },
       ]
     },
   ];
@@ -242,36 +247,31 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     handleSubMenuClick(item.id);
                   }}
                 >
-                  {openSubMenu === item.id ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+                  {openSubMenu.includes(item.id) ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
                 </IconButton>
               )}
             </ListItem>
             {item.subItems && (
-              <Collapse in={openSubMenu === item.id && open} timeout="auto" unmountOnExit>
+              <Collapse in={openSubMenu.includes(item.id)} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   {item.subItems.map((subItem) => (
                     <ListItem
                       key={subItem.text}
-                      component="div"
-                      onClick={() => subItem.path && handleNavigate(subItem.path)}
+                      onClick={() => handleNavigate(subItem.path)}
                       sx={{
-                        pl: 6,
+                        pl: 4,
                         borderRadius: 2,
                         mb: 1,
                         cursor: 'pointer',
-                        backgroundColor: subItem.path && isActive(subItem.path) ? 'primary.main' : 'transparent',
-                        borderLeft: `2px solid ${theme.palette.mode === 'light' 
-                          ? 'rgba(0, 0, 0, 0.08)' 
-                          : 'rgba(255, 255, 255, 0.08)'}`,
+                        backgroundColor: isActive(subItem.path) ? 'primary.main' : 'transparent',
                         '&:hover': {
                           backgroundColor: 'primary.main',
-                          borderLeftColor: 'primary.main',
                           '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
                             color: 'white',
                           },
                         },
                         '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-                          color: subItem.path && isActive(subItem.path) ? 'white' : 'inherit',
+                          color: isActive(subItem.path) ? 'white' : 'inherit',
                         },
                       }}
                     >

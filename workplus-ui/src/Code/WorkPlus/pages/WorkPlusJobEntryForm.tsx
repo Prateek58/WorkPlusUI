@@ -23,7 +23,8 @@ import {
   IconButton,
   Tooltip,
   Autocomplete,
-  useTheme
+  useTheme,
+  TablePagination
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -99,6 +100,9 @@ const WorkPlusJobEntryForm: React.FC = () => {
   // Saved records
   const [savedRecords, setSavedRecords] = useState<JobEntryResponse[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [workerInputValue, setWorkerInputValue] = useState('');
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
@@ -136,13 +140,13 @@ const WorkPlusJobEntryForm: React.FC = () => {
     fetchData();
   }, []);
 
-  // Function to fetch saved records
+  // Function to fetch saved records with pagination
   const fetchSavedRecords = async () => {
     setLoadingRecords(true);
     try {
-      const records = await jobEntryService.getJobEntries();
-      console.log('Fetched job entries:', records);
-      setSavedRecords(records);
+      const response = await jobEntryService.getPaginatedJobEntries(page + 1, rowsPerPage);
+      setSavedRecords(response.items);
+      setTotalCount(response.totalCount);
     } catch (err) {
       console.error('Error fetching job entries:', err);
       setError('Failed to load saved records.');
@@ -150,6 +154,22 @@ const WorkPlusJobEntryForm: React.FC = () => {
       setLoadingRecords(false);
     }
   };
+
+  // Handle page change
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Fetch records when page or rowsPerPage changes
+  useEffect(() => {
+    fetchSavedRecords();
+  }, [page, rowsPerPage]);
 
   // Handle entry type change (Individual/Group)
   const handleEntryTypeChange = (_: React.MouseEvent<HTMLElement>, newEntryType: 'Individual' | 'Group' | null) => {
@@ -772,84 +792,95 @@ const WorkPlusJobEntryForm: React.FC = () => {
               <CircularProgress />
             </Box>
           ) : savedRecords.length > 0 ? (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>ID</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Date</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Entry Type</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Worker/Group</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Job Type</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Expected Hours</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Hours Taken</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Items Completed</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Rate (Per Hour/Item)</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Productive Hours</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Extra Hours</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Underperformance Hours</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Incentive Amount</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Total Amount</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Shift</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Remarks</TableCell>
-                    <TableCell sx={tableCellHeaderStyles(theme)}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {savedRecords.map((record) => {
-                    // Determine if job is hourly based or item based based on actual values
-                    const isHourlyJob = record.hoursTaken !== null && record.hoursTaken !== undefined;
-                    const isItemBasedJob = record.itemsCompleted !== null && record.itemsCompleted !== undefined;
+            <>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>ID</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Date</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Entry Type</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Worker/Group</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Job Type</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Expected Hours</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Hours Taken</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Items Completed</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Rate (Per Hour/Item)</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Productive Hours</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Extra Hours</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Underperformance Hours</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Incentive Amount</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Total Amount</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Shift</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Remarks</TableCell>
+                      <TableCell sx={tableCellHeaderStyles(theme)}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {savedRecords.map((record) => {
+                      // Determine if job is hourly based or item based based on actual values
+                      const isHourlyJob = record.hoursTaken !== null && record.hoursTaken !== undefined;
+                      const isItemBasedJob = record.itemsCompleted !== null && record.itemsCompleted !== undefined;
 
-                    return (
-                      <TableRow key={record.entryId}>
-                        <TableCell>{record.entryId}</TableCell>
-                        <TableCell>{record.createdAt ? dayjs(record.createdAt).format('MM/DD/YYYY') : 'N/A'}</TableCell>
-                        <TableCell>{record.entryType || 'N/A'}</TableCell>
-                        <TableCell>{record.workerName || record.groupName || 'N/A'}</TableCell>
-                        <TableCell>{record.jobName}</TableCell>
-                        <TableCell>{record.expectedHours?.toFixed(2) || 'N/A'}</TableCell>
-                        <TableCell>
-                          {isHourlyJob ? record.hoursTaken?.toFixed(2) : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {isItemBasedJob ? record.itemsCompleted : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {isHourlyJob ? `₹${record.ratePerJob?.toFixed(2)}/hr` : 
-                           isItemBasedJob ? `₹${record.ratePerJob?.toFixed(2)}/item` : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {isHourlyJob ? record.productiveHours?.toFixed(2) : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {isHourlyJob ? record.extraHours?.toFixed(2) : 
-                           isItemBasedJob ? record.extraHours?.toFixed(2) : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {isHourlyJob ? record.underperformanceHours?.toFixed(2) : 'N/A'}
-                        </TableCell>
-                        <TableCell>{record.incentiveAmount?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>{record.totalAmount?.toFixed(2) || '0.00'}</TableCell>
-                        <TableCell>{record.isPostLunch ? 'Afternoon/Evening' : 'Morning'}</TableCell>
-                        <TableCell>{record.remarks || 'N/A'}</TableCell>
-                        <TableCell>
-                          <Tooltip title="Delete">
-                            <IconButton 
-                              onClick={() => handleDeleteRecord(record.entryId)}
-                              color="error"
-                              size="small"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                      return (
+                        <TableRow key={record.entryId}>
+                          <TableCell>{record.entryId}</TableCell>
+                          <TableCell>{record.createdAt ? dayjs(record.createdAt).format('MM/DD/YYYY') : 'N/A'}</TableCell>
+                          <TableCell>{record.entryType || 'N/A'}</TableCell>
+                          <TableCell>{record.workerName || record.groupName || 'N/A'}</TableCell>
+                          <TableCell>{record.jobName}</TableCell>
+                          <TableCell>{record.expectedHours?.toFixed(2) || 'N/A'}</TableCell>
+                          <TableCell>
+                            {isHourlyJob ? record.hoursTaken?.toFixed(2) : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {isItemBasedJob ? record.itemsCompleted : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {isHourlyJob ? `₹${record.ratePerJob?.toFixed(2)}/hr` : 
+                             isItemBasedJob ? `₹${record.ratePerJob?.toFixed(2)}/item` : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {isHourlyJob ? record.productiveHours?.toFixed(2) : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {isHourlyJob ? record.extraHours?.toFixed(2) : 
+                             isItemBasedJob ? record.extraHours?.toFixed(2) : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {isHourlyJob ? record.underperformanceHours?.toFixed(2) : 'N/A'}
+                          </TableCell>
+                          <TableCell>{record.incentiveAmount?.toFixed(2) || '0.00'}</TableCell>
+                          <TableCell>{record.totalAmount?.toFixed(2) || '0.00'}</TableCell>
+                          <TableCell>{record.isPostLunch ? 'Afternoon/Evening' : 'Morning'}</TableCell>
+                          <TableCell>{record.remarks || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Tooltip title="Delete">
+                              <IconButton 
+                                onClick={() => handleDeleteRecord(record.entryId)}
+                                color="error"
+                                size="small"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                component="div"
+                count={totalCount}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+              />
+            </>
           ) : (
             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               No saved records found.
