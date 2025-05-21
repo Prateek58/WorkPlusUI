@@ -14,12 +14,16 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
+  Paper,
+  TextField,
+  TablePagination,
+  InputAdornment
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import { Worker, useWorkerService } from '../../../services/workerService';
 import WorkerFormDialog from './WorkerFormDialog';
 import Loader from '../../../../Common/components/Loader';
@@ -32,10 +36,14 @@ interface WorkersDialogProps {
 const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
   const theme = useTheme();
   const [workers, setWorkers] = useState<Worker[]>([]);
+  const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>([]);
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const { getWorkers, getWorker, deleteWorker } = useWorkerService();
 
   useEffect(() => {
@@ -45,17 +53,36 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
       // Reset states when dialog closes
       setLoading(false);
       setWorkers([]);
+      setFilteredWorkers([]);
       setSelectedWorker(null);
       setIsFormOpen(false);
       setIsEdit(false);
+      setSearchQuery('');
+      setPage(0);
     }
   }, [open]);
+
+  useEffect(() => {
+    // Filter workers based on search query
+    const filtered = workers.filter(worker => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        worker.fullName?.toLowerCase().includes(searchLower) ||
+        worker.firstName?.toLowerCase().includes(searchLower) ||
+        worker.lastName?.toLowerCase().includes(searchLower) ||
+        worker.workerId.toString().includes(searchQuery)
+      );
+    });
+    setFilteredWorkers(filtered);
+    setPage(0); // Reset to first page when search changes
+  }, [searchQuery, workers]);
 
   const loadWorkers = async () => {
     setLoading(true);
     try {
       const data = await getWorkers();
       setWorkers(data);
+      setFilteredWorkers(data);
     } catch (error) {
       console.error('Error loading workers:', error);
     } finally {
@@ -113,6 +140,15 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
     }
   };
 
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <>
       <Loader open={loading} message="Loading workers..." />
@@ -140,13 +176,26 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
           <Typography variant="h6" component="div">
             Workers
           </Typography>
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <TextField
+              size="small"
+              placeholder="Search workers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{ width: 250 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
             <Button
               variant="contained"
               color="primary"
               startIcon={<AddIcon />}
               onClick={handleAddClick}
-              sx={{ mr: 1 }}
             >
               Add Worker
             </Button>
@@ -172,7 +221,7 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
           display: 'flex',
           flexDirection: 'column'
         }}>
-          {!loading && workers.length > 0 && (
+          {!loading && filteredWorkers.length > 0 && (
             <TableContainer 
               component={Paper}
               sx={{
@@ -193,36 +242,47 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {workers.map((worker) => (
-                    <TableRow key={worker.workerId}>
-                      <TableCell>{worker.workerId}</TableCell>
-                      <TableCell>{worker.fullName}</TableCell>
-                      <TableCell>{worker.phone}</TableCell>
-                      <TableCell>{worker.email}</TableCell>
-                      <TableCell>{worker.typeId}</TableCell>
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEditClick(worker)}
-                          sx={{ mr: 1 }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick(worker)}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredWorkers
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((worker) => (
+                      <TableRow key={worker.workerId}>
+                        <TableCell>{worker.workerId}</TableCell>
+                        <TableCell>{worker.fullName}</TableCell>
+                        <TableCell>{worker.phone}</TableCell>
+                        <TableCell>{worker.email}</TableCell>
+                        <TableCell>{worker.typeId}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditClick(worker)}
+                            sx={{ mr: 1 }}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteClick(worker)}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={filteredWorkers.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
             </TableContainer>
           )}
-          {!loading && workers.length === 0 && (
+          {!loading && filteredWorkers.length === 0 && (
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'center', 
@@ -230,7 +290,9 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
               height: '100%',
               color: theme.palette.text.secondary
             }}>
-              <Typography>No workers found</Typography>
+              <Typography>
+                {searchQuery ? 'No workers found matching your search' : 'No workers found'}
+              </Typography>
             </Box>
           )}
         </DialogContent>
