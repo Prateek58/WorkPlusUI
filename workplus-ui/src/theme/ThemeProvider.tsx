@@ -1,6 +1,29 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Components } from '@mui/material/styles';
+
+declare module '@mui/material/styles' {
+  interface Components {
+    MuiDataGrid?: {
+      styleOverrides?: {
+        root?: {
+          border?: string;
+          '& .MuiDataGrid-cell'?: {
+            borderBottom?: string;
+          };
+          '& .MuiDataGrid-columnHeaders'?: {
+            borderBottom?: string;
+          };
+        };
+        footerContainer?: {
+          borderTop?: string;
+          padding?: string;
+        };
+      };
+    };
+  }
+}
 
 type ThemeContextType = {
   mode: 'light' | 'dark';
@@ -257,6 +280,60 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
               footerContainer: {
                 borderTop: `1px solid ${mode === 'light' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)'}`,
                 padding: '8px 16px',
+              },
+            },
+          },
+          MuiCssBaseline: {
+            styleOverrides: {
+              '*': {
+                boxSizing: 'border-box',
+              },
+              html: {
+                margin: 0,
+                padding: 0,
+                width: '100%',
+                height: '100%',
+              },
+              body: {
+                margin: 0,
+                padding: 0,
+                width: '100%',
+                height: '100%',
+              },
+              '#root': {
+                width: '100%',
+                height: '100%',
+              },
+              'input': {
+                '&[type=number]': {
+                  MozAppearance: 'textfield',
+                  '&::-webkit-outer-spin-button': {
+                    margin: 0,
+                    WebkitAppearance: 'none',
+                  },
+                  '&::-webkit-inner-spin-button': {
+                    margin: 0,
+                    WebkitAppearance: 'none',
+                  },
+                },
+              },
+              'img': {
+                display: 'block',
+                maxWidth: '100%',
+              },
+              '*::-webkit-scrollbar': {
+                width: '6px',
+                height: '6px',
+              },
+              '*::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '*::-webkit-scrollbar-thumb': {
+                background: mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)',
+                borderRadius: '3px',
+                '&:hover': {
+                  background: mode === 'dark' ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.25)',
+                },
               },
             },
           },

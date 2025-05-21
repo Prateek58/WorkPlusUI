@@ -60,11 +60,18 @@ export interface JobEntryResponse {
   jobName: string;
   workerName?: string;
   groupName?: string;
+  entryType?: string;
   expectedHours?: number;
   hoursTaken?: number;
   itemsCompleted?: number;
+  ratePerJob?: number;
+  productiveHours?: number;
+  extraHours?: number;
+  underperformanceHours?: number;
   incentiveAmount?: number;
   totalAmount?: number;
+  isPostLunch?: boolean;
+  remarks?: string;
   createdAt?: string;
 }
 
