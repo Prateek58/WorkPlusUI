@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { API_URL } from '../config';
-import { useApi } from '../../Common/hooks/useApi';
+import { API_URL } from '../../../config';
+import { useApi } from '../../../../Common/hooks/useApi';
 
 export interface Worker {
   workerId: number;

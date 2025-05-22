@@ -24,9 +24,9 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
-import { Worker, useWorkerService } from '../../../services/workerService';
 import WorkerFormDialog from './WorkerFormDialog';
 import Loader from '../../../../Common/components/Loader';
+import { useWorkerService } from './workerService';
 
 interface WorkersDialogProps {
   open: boolean;

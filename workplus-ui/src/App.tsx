@@ -15,10 +15,10 @@ import Profile from './Code/Common/pages/Profile';
 import Settings from './Code/Common/pages/Settings';
 import Help from './Code/Common/pages/Help';
 import JobWork from './Code/Archive/pages/JobWork';
-import WorkPlusJobEntryForm from './Code/WorkPlus/pages/WorkPlusJobEntryForm';
 import WorkPlusMasters from './Code/WorkPlus/pages/WorkPlusMasters';
 import PrivateRoute from './Code/Common/components/PrivateRoute';
 import { ThemeContextProvider } from './theme/ThemeProvider';
+import WorkPlusJobEntryForm from './Code/WorkPlus/pages/workplus-job-entry/WorkPlusJobEntryForm';
 
 const App: React.FC = () => {
   return (
