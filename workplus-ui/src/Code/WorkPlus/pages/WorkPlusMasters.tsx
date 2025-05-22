@@ -24,6 +24,9 @@ import JobGroupsDialog from '../components/masters/job-group/JobGroupsDialog';
 import GroupMembersDialog from '../components/masters/group-member/GroupMembersDialog';
 import UserRolesDialog from '../components/masters/user/UserRolesDialog';
 import JobsDialog from '../components/masters/job/JobsDialog';
+import JobTypesDialog from '../components/masters/job-type/JobTypesDialog';
+import EmployeeTypesDialog from '../components/masters/employee-type/EmployeeTypesDialog';
+import RolesDialog from '../components/masters/role/RolesDialog';
 
 const WorkPlusMasters: React.FC = () => {
   const theme = useTheme();
@@ -33,6 +36,9 @@ const WorkPlusMasters: React.FC = () => {
   const [groupMembersDialogOpen, setGroupMembersDialogOpen] = useState(false);
   const [userRolesDialogOpen, setUserRolesDialogOpen] = useState(false);
   const [jobsDialogOpen, setJobsDialogOpen] = useState(false);
+  const [jobTypesDialogOpen, setJobTypesDialogOpen] = useState(false);
+  const [employeeTypesDialogOpen, setEmployeeTypesDialogOpen] = useState(false);
+  const [rolesDialogOpen, setRolesDialogOpen] = useState(false);
 
   const masterItems = [
     {
@@ -75,19 +81,19 @@ const WorkPlusMasters: React.FC = () => {
       title: 'Job Types',
       icon: <AssignmentIcon fontSize="large" />,
       color: '#9c27b0', // Purple
-      onClick: () => console.log('Job Types clicked')
+      onClick: () => setJobTypesDialogOpen(true)
     },
     {
       title: 'Employee Types',
       icon: <BadgeIcon fontSize="large" />,
       color: '#795548', // Brown
-      onClick: () => console.log('Employee Types clicked')
+      onClick: () => setEmployeeTypesDialogOpen(true)
     },
     {
       title: 'Roles',
       icon: <BusinessIcon fontSize="large" />,
       color: '#607d8b', // Blue Grey
-      onClick: () => console.log('Units clicked')
+      onClick: () => setRolesDialogOpen(true)
     }
   ];
 
@@ -167,6 +173,18 @@ const WorkPlusMasters: React.FC = () => {
         open={jobsDialogOpen}
         onClose={() => setJobsDialogOpen(false)}
         userId={1} // Use actual logged-in user ID here
+      />
+      <JobTypesDialog
+        open={jobTypesDialogOpen}
+        onClose={() => setJobTypesDialogOpen(false)}
+      />
+      <EmployeeTypesDialog
+        open={employeeTypesDialogOpen}
+        onClose={() => setEmployeeTypesDialogOpen(false)}
+      />
+      <RolesDialog
+        open={rolesDialogOpen}
+        onClose={() => setRolesDialogOpen(false)}
       />
     </DashboardLayout>
   );
