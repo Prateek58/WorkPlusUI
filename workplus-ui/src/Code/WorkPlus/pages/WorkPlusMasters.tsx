@@ -17,127 +17,122 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import WorkersDialog from '../components/masters/worker/WorkersDialog';
 import UsersDialog from '../components/masters/user/UsersDialog';
+import JobGroupsDialog from '../components/masters/job-group/JobGroupsDialog';
+import GroupMembersDialog from '../components/masters/group-member/GroupMembersDialog';
 import UserRolesDialog from '../components/masters/user/UserRolesDialog';
+import JobsDialog from '../components/masters/job/JobsDialog';
 
 const WorkPlusMasters: React.FC = () => {
   const theme = useTheme();
-  const [openDialog, setOpenDialog] = useState<string | null>(null);
+  const [workersDialogOpen, setWorkersDialogOpen] = useState(false);
+  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+  const [jobGroupsDialogOpen, setJobGroupsDialogOpen] = useState(false);
+  const [groupMembersDialogOpen, setGroupMembersDialogOpen] = useState(false);
+  const [userRolesDialogOpen, setUserRolesDialogOpen] = useState(false);
+  const [jobsDialogOpen, setJobsDialogOpen] = useState(false);
 
-  const handleOpenDialog = (dialogName: string) => {
-    setOpenDialog(dialogName);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(null);
-  };
-
-  const masterCards = [
+  const masterItems = [
     {
       title: 'Workers',
-      description: 'Manage worker information and details',
-      icon: <PeopleIcon sx={{ fontSize: 40 }} />,
-      dialog: 'workers'
+      icon: <PeopleIcon fontSize="large" />,
+      color: theme.palette.primary.main,
+      onClick: () => setWorkersDialogOpen(true)
     },
     {
       title: 'Users',
-      description: 'Manage system users and access',
-      icon: <PersonIcon sx={{ fontSize: 40 }} />,
-      dialog: 'users'
+      icon: <PersonIcon fontSize="large" />,
+      color: theme.palette.success.main,
+      onClick: () => setUsersDialogOpen(true)
     },
     {
-      title: 'Roles',
-      description: 'Configure user roles and permissions',
-      icon: <SupervisorAccountIcon sx={{ fontSize: 40 }} />,
-      dialog: 'roles'
+      title: 'User Roles',
+      icon: <SupervisorAccountIcon fontSize="large" />,
+      color: theme.palette.warning.main,
+      onClick: () => setUserRolesDialogOpen(true)
     },
     {
       title: 'Job Groups',
-      description: 'Manage job group configurations',
-      icon: <GroupIcon sx={{ fontSize: 40 }} />,
-      dialog: 'job-groups'
-    },
-    {
-      title: 'Jobs',
-      description: 'Configure job types and rates',
-      icon: <WorkIcon sx={{ fontSize: 40 }} />,
-      dialog: 'jobs'
+      icon: <GroupIcon fontSize="large" />,
+      color: theme.palette.info.main,
+      onClick: () => setJobGroupsDialogOpen(true)
     },
     {
       title: 'Group Members',
-      description: 'Manage group member assignments',
-      icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
-      dialog: 'group-members'
+      icon: <PersonAddIcon fontSize="large" />,
+      color: theme.palette.secondary.main,
+      onClick: () => setGroupMembersDialogOpen(true)
+    },
+    {
+      title: 'Jobs',
+      icon: <WorkIcon fontSize="large" />,
+      color: theme.palette.error.main,
+      onClick: () => setJobsDialogOpen(true)
+    },
+    {
+      title: 'Job Types',
+      icon: <AssignmentIcon fontSize="large" />,
+      color: '#9c27b0', // Purple
+      onClick: () => console.log('Job Types clicked')
     },
     {
       title: 'Employee Types',
-      description: 'Configure employee type categories',
-      icon: <BadgeIcon sx={{ fontSize: 40 }} />,
-      dialog: 'employee-types'
+      icon: <BadgeIcon fontSize="large" />,
+      color: '#795548', // Brown
+      onClick: () => console.log('Employee Types clicked')
     },
     {
-      title: 'Companies',
-      description: 'Manage company information',
-      icon: <BusinessIcon sx={{ fontSize: 40 }} />,
-      dialog: 'companies'
+      title: 'Roles',
+      icon: <BusinessIcon fontSize="large" />,
+      color: '#607d8b', // Blue Grey
+      onClick: () => console.log('Units clicked')
     }
   ];
 
   return (
     <DashboardLayout>
-      <Box sx={{ p: 3 , mt:4}}>
-        <Typography variant="h4" sx={{ mb: 4, color: theme.palette.text.primary }}>
-          WorkPlus Masters
+      <Box p={3} mt={3}>
+        <Typography variant="h4" gutterBottom>
+          Master Data
         </Typography>
-
         <Grid container spacing={3}>
-          {masterCards.map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+          {masterItems.map((item, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
               <Card 
                 sx={{ 
-                  height: '100%',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  height: '100%', 
+                  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                   '&:hover': {
                     transform: 'translateY(-4px)',
-                    boxShadow: theme.shadows[4]
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
                   }
                 }}
               >
                 <CardActionArea 
-                  sx={{ 
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    p: 2
-                  }}
-                  onClick={() => handleOpenDialog(card.dialog)}
+                  onClick={item.onClick}
+                  sx={{ height: '100%' }}
                 >
-                  <Box 
-                    sx={{ 
-                      color: theme.palette.primary.main,
-                      mb: 2
-                    }}
-                  >
-                    {card.icon}
-                  </Box>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography 
-                      variant="h6" 
-                      component="div" 
+                  <CardContent sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    p: 3
+                  }}>
+                    <Box 
                       sx={{ 
-                        mb: 1,
-                        color: theme.palette.text.primary
+                        p: 2, 
+                        borderRadius: '50%', 
+                        bgcolor: `${item.color}15`, 
+                        color: item.color,
+                        mb: 2
                       }}
                     >
-                      {card.title}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary"
-                    >
-                      {card.description}
+                      {item.icon}
+                    </Box>
+                    <Typography variant="h6" component="div" align="center">
+                      {item.title}
                     </Typography>
                   </CardContent>
                 </CardActionArea>
@@ -145,22 +140,34 @@ const WorkPlusMasters: React.FC = () => {
             </Grid>
           ))}
         </Grid>
-
-        {/* Dialogs */}
-        <WorkersDialog 
-          open={openDialog === 'workers'} 
-          onClose={handleCloseDialog} 
-        />
-        <UsersDialog
-          open={openDialog === 'users'}
-          onClose={handleCloseDialog}
-        />
-        <UserRolesDialog
-          open={openDialog === 'roles'}
-          onClose={handleCloseDialog}
-        />
-        {/* Add other dialogs here as they are created */}
       </Box>
+
+      {/* Dialogs */}
+      <WorkersDialog
+        open={workersDialogOpen}
+        onClose={() => setWorkersDialogOpen(false)}
+      />
+      <UsersDialog
+        open={usersDialogOpen}
+        onClose={() => setUsersDialogOpen(false)}
+      />
+      <JobGroupsDialog
+        open={jobGroupsDialogOpen}
+        onClose={() => setJobGroupsDialogOpen(false)}
+      />
+      <GroupMembersDialog
+        open={groupMembersDialogOpen}
+        onClose={() => setGroupMembersDialogOpen(false)}
+      />
+      <UserRolesDialog
+        open={userRolesDialogOpen}
+        onClose={() => setUserRolesDialogOpen(false)}
+      />
+      <JobsDialog
+        open={jobsDialogOpen}
+        onClose={() => setJobsDialogOpen(false)}
+        userId={1} // Use actual logged-in user ID here
+      />
     </DashboardLayout>
   );
 };
