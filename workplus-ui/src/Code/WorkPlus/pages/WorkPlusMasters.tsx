@@ -18,6 +18,8 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import WorkersDialog from '../components/masters/worker/WorkersDialog';
+import UsersDialog from '../components/masters/user/UsersDialog';
+import UserRolesDialog from '../components/masters/user/UserRolesDialog';
 
 const WorkPlusMasters: React.FC = () => {
   const theme = useTheme();
@@ -148,6 +150,14 @@ const WorkPlusMasters: React.FC = () => {
         <WorkersDialog 
           open={openDialog === 'workers'} 
           onClose={handleCloseDialog} 
+        />
+        <UsersDialog
+          open={openDialog === 'users'}
+          onClose={handleCloseDialog}
+        />
+        <UserRolesDialog
+          open={openDialog === 'roles'}
+          onClose={handleCloseDialog}
         />
         {/* Add other dialogs here as they are created */}
       </Box>
