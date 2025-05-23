@@ -27,7 +27,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import WorkerFormDialog from './WorkerFormDialog';
 import Loader from '../../../../Common/components/Loader';
 import { useWorkerService } from './workerService';
-
+import { Worker } from './workerService';
 interface WorkersDialogProps {
   open: boolean;
   onClose: () => void;

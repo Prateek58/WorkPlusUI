@@ -16,11 +16,11 @@ import Profile from './Code/Common/pages/Profile';
 import Settings from './Code/Common/pages/Settings';
 import Help from './Code/Common/pages/Help';
 import JobWork from './Code/Archive/pages/JobWork';
-import WorkPlusMasters from './Code/WorkPlus/pages/WorkPlusMasters';
-import WorkPlusReports from './Code/WorkPlus/pages/WorkPlusReports';
 import PrivateRoute from './Code/Common/components/PrivateRoute';
 import { ThemeContextProvider } from './theme/ThemeProvider';
-import WorkPlusJobEntryForm from './Code/WorkPlus/pages/workplus-job-entry/WorkPlusJobEntryForm';
+import WorkPlusJobEntryForm from './Code/MainWorkPlus/components/forms/workplus-job-entry/WorkPlusJobEntryForm';
+import WorkPlusMastersLanding from './Code/MainWorkPlus/pages/WorkPlusMastersLanding';
+import WorkPlusReportsLanding from './Code/MainWorkPlus/pages/WorkPlusReportsLanding';
 
 const App: React.FC = () => {
   return (
@@ -42,8 +42,8 @@ const App: React.FC = () => {
                     <Route path="help" element={<Help />} />
                     <Route path="job-work" element={<JobWork />} />
                     <Route path="work-entry" element={<WorkPlusJobEntryForm />} />
-                    <Route path="masters" element={<WorkPlusMasters />} />
-                    <Route path="reports" element={<WorkPlusReports />} />
+                    <Route path="masters" element={<WorkPlusMastersLanding />} />
+                    <Route path="reports" element={<WorkPlusReportsLanding />} />
                   </Route>
                 </Routes>
               </Router>

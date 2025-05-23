@@ -18,10 +18,9 @@ import {
   Tab
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { Worker, useWorkerService } from '../../../services/workerService';
 import Loader from '../../../../Common/components/Loader';
 import Notification from '../../../../Common/components/Notification';
-
+import { Worker } from './workerService';
 interface WorkerFormDialogProps {
   open: boolean;
   onClose: () => void;

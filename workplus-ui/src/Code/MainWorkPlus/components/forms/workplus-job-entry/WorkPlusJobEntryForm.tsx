@@ -31,7 +31,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
-import DashboardLayout from '../../../Common/components/DashboardLayout';
 import dayjs from 'dayjs';
 import jobEntryService from './jobEntryService';
 import type { Worker, Job, JobGroup, JobEntryResponse } from './jobEntryService';
@@ -43,7 +42,8 @@ import {
   formFieldStyles,
   centeredContentStyles,
   tableCellHeaderStyles
-} from '../../../../theme/styleUtils';
+} from '../../../../../theme/styleUtils';
+import DashboardLayout from '../../../../Common/components/DashboardLayout';
 
 // Type for form data
 interface FormData {

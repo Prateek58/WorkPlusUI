@@ -36,7 +36,7 @@ const reportTypes = [
   }
 ];
 
-const WorkPlusReports: React.FC = () => {
+const WorkPlusReportsLanding: React.FC = () => {
   const theme = useTheme();
 
   return (
@@ -110,4 +110,4 @@ const WorkPlusReports: React.FC = () => {
   );
 };
 
-export default WorkPlusReports; 
+export default WorkPlusReportsLanding; 

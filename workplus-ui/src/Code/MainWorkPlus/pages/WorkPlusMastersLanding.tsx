@@ -28,7 +28,7 @@ import JobTypesDialog from '../components/masters/job-type/JobTypesDialog';
 import EmployeeTypesDialog from '../components/masters/employee-type/EmployeeTypesDialog';
 import RolesDialog from '../components/masters/role/RolesDialog';
 
-const WorkPlusMasters: React.FC = () => {
+const WorkPlusMastersLanding: React.FC = () => {
   const theme = useTheme();
   const [workersDialogOpen, setWorkersDialogOpen] = useState(false);
   const [usersDialogOpen, setUsersDialogOpen] = useState(false);
@@ -190,4 +190,4 @@ const WorkPlusMasters: React.FC = () => {
   );
 };
 
-export default WorkPlusMasters; 
+export default WorkPlusMastersLanding; 

@@ -19,7 +19,7 @@ import { User, useUserService } from './userService';
 import Loader from '../../../../Common/components/Loader';
 import Notification from '../../../../Common/components/Notification';
 import axios from 'axios';
-import { API_URL } from '../../../config';
+import { API_URL } from '../../../../Common/config';
 
 interface UserFormDialogProps {
   open: boolean;
