@@ -138,6 +138,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       subItems: [
         { text: 'Work Entry', icon: <JobWorkIcon />, path: '/work-entry' },
         { text: 'Masters', icon: <SettingsIcon />, path: '/masters' },
+        { text: 'Reports', icon: <DescriptionIcon />, path: '/reports' },
       ]
     },
   ];

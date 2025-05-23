@@ -1,4 +1,5 @@
-import { Box, Card, Grid, Typography, IconButton } from '@mui/material';
+import React from 'react';
+import { Box, Card, Grid, Typography, IconButton, Chip } from '@mui/material';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
@@ -11,6 +12,10 @@ import {
   flexContainerStyles, 
   centeredContentStyles 
 } from '../../../theme/styleUtils';
+import { useNavigate } from 'react-router-dom';
+import WorkIcon from '@mui/icons-material/Work';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ArticleIcon from '@mui/icons-material/Article';
 
 // Dummy data
 const dummyJobWorks = [
@@ -48,6 +53,7 @@ const dummyJobDistribution = [
 
 const Dashboard = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   // Calculate today's statistics
   const today = dayjs().format('YYYY-MM-DD');
@@ -80,9 +86,40 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <Typography variant="h4" sx={{ ...sectionTitleStyles(theme), mt: 9 }}>
-        Dashboard WorkPlus
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 9, mb: 2, flexWrap: 'wrap' }}>
+        <Typography variant="h4" sx={{ ...sectionTitleStyles(theme), mr: 2 }}>
+          Dashboard WorkPlus
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Chip
+            icon={<WorkIcon />}
+            label="Work Entry"
+            color="primary"
+            variant="outlined"
+            clickable
+            onClick={() => navigate('/work-entry')}
+            sx={{ fontWeight: 500 }}
+          />
+          <Chip
+            icon={<SettingsIcon />}
+            label="Masters"
+            color="primary"
+            variant="outlined"
+            clickable
+            onClick={() => navigate('/masters')}
+            sx={{ fontWeight: 500 }}
+          />
+          <Chip
+            icon={<ArticleIcon />}
+            label="Reports"
+            color="primary"
+            variant="outlined"
+            clickable
+            onClick={() => navigate('/reports')}
+            sx={{ fontWeight: 500 }}
+          />
+        </Box>
+      </Box>
 
       <Grid container spacing={2}>
         {/* Stats Cards */}
