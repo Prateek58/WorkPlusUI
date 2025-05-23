@@ -29,6 +29,7 @@ import JobGroupFormDialog from './JobGroupFormDialog';
 import { JobGroup, useJobGroupService } from './jobGroupService';
 import Loader from '../../../../Common/components/Loader';
 import { useConfirm } from '../../../../Common/hooks/useConfirm';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface JobGroupsDialogProps {
   open: boolean;
@@ -239,8 +240,10 @@ const JobGroupsDialog: React.FC<JobGroupsDialogProps> = ({ open, onClose }) => {
         <DialogContent sx={{ p: 2 }}>
           <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', minHeight: '400px' }}>
             <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: theme.palette.action.hover }}>
+              <TableHead
+                sx={getTableHeaderStyle()}
+              >
+                <TableRow>
                   <TableCell>ID</TableCell>
                   <TableCell>Group Name</TableCell>
                   <TableCell>Min Workers</TableCell>

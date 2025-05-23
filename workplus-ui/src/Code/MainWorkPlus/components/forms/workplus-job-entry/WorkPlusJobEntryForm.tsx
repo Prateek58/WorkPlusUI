@@ -797,23 +797,23 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>ID</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Date</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Entry Type</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Worker/Group</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Job Type</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Expected Hours</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Hours Taken</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Items Completed</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Rate (Per Hour/Item)</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Productive Hours</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Extra Hours</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Underperformance Hours</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Incentive Amount</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Total Amount</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Shift</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Remarks</TableCell>
-                      <TableCell sx={tableCellHeaderStyles(theme)}>Actions</TableCell>
+                      <TableCell>ID</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Entry Type</TableCell>
+                      <TableCell>Worker/Group</TableCell>
+                      <TableCell>Job Type</TableCell>
+                      <TableCell>Expected Hours</TableCell>
+                      <TableCell>Hours Taken</TableCell>
+                      <TableCell>Items Completed</TableCell>
+                      <TableCell>Rate (Per Hour/Item)</TableCell>
+                      <TableCell>Productive Hours</TableCell>
+                      <TableCell>Extra Hours</TableCell>
+                      <TableCell>Underperformance Hours</TableCell>
+                      <TableCell>Incentive Amount</TableCell>
+                      <TableCell>Total Amount</TableCell>
+                      <TableCell>Shift</TableCell>
+                      <TableCell>Remarks</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>

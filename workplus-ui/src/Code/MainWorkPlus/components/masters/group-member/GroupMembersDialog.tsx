@@ -38,6 +38,7 @@ import {
 } from './groupMemberService';
 import Loader from '../../../../Common/components/Loader';
 import { useConfirm } from '../../../../Common/hooks/useConfirm';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface GroupMembersDialogProps {
   open: boolean;
@@ -302,8 +303,10 @@ const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({ open, onClose }
         <DialogContent sx={{ p: 2 }}>
           <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', minHeight: '400px' }}>
             <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: theme.palette.action.hover }}>
+              <TableHead
+                sx={getTableHeaderStyle()}
+              >
+                <TableRow>
                   <TableCell>ID</TableCell>
                   <TableCell>Group</TableCell>
                   <TableCell>Worker</TableCell>

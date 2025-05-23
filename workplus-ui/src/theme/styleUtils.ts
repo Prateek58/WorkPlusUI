@@ -1,4 +1,4 @@
-import { SxProps, Theme } from '@mui/material/styles';
+import { SxProps, Theme, alpha } from '@mui/material/styles';
 
 // Using CustomTheme type from theme.ts
 interface CustomTheme extends Theme {
@@ -91,12 +91,7 @@ export const formContainerStyles = (theme: Theme): SxProps => ({
 });
 
 // Table cell styles
-export const tableCellHeaderStyles = (theme: Theme): SxProps => ({
-  fontWeight: 600,
-  backgroundColor: theme.palette.mode === 'light' 
-    ? theme.palette.primary.light + '15' 
-    : theme.palette.primary.dark + '25',
-});
+ 
 
 // Common input field height
 export const inputHeight = '45px';

@@ -22,6 +22,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { JobType, useJobTypeService } from './jobTypeService';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface JobTypesDialogProps {
   open: boolean;
@@ -130,7 +131,9 @@ const JobTypesDialog: React.FC<JobTypesDialogProps> = ({ open, onClose }) => {
 
         <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', minHeight: '400px' }}>
           <Table>
-            <TableHead>
+            <TableHead
+              sx={getTableHeaderStyle()}
+            >
               <TableRow>
                 <TableCell>ID</TableCell>
                 <TableCell>Type Name</TableCell>

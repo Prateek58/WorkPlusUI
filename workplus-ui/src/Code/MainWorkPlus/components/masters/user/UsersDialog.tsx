@@ -30,6 +30,7 @@ import UserFormDialog from './UserFormDialog';
 import UserRoleManagement from './UserRoleManagement';
 import Loader from '../../../../Common/components/Loader';
 import { User, useUserService } from './userService';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface UsersDialogProps {
   open: boolean;
@@ -178,7 +179,6 @@ const UsersDialog: React.FC<UsersDialogProps> = ({ open, onClose }) => {
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: theme.palette.background.default,
             boxShadow: 24,
             borderRadius: 2,
           }
@@ -250,7 +250,9 @@ const UsersDialog: React.FC<UsersDialogProps> = ({ open, onClose }) => {
               }}
             >
               <Table>
-                <TableHead>
+                <TableHead
+                  sx={getTableHeaderStyle()}
+                >
                   <TableRow>
                     <TableCell>ID</TableCell>
                     <TableCell>Username</TableCell>

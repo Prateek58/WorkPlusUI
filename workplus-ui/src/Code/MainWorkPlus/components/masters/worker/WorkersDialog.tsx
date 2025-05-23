@@ -28,6 +28,8 @@ import WorkerFormDialog from './WorkerFormDialog';
 import Loader from '../../../../Common/components/Loader';
 import { useWorkerService } from './workerService';
 import { Worker } from './workerService';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
+
 interface WorkersDialogProps {
   open: boolean;
   onClose: () => void;
@@ -159,7 +161,6 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: theme.palette.background.default,
             boxShadow: 24,
             borderRadius: 2,
           }
@@ -231,7 +232,9 @@ const WorkersDialog: React.FC<WorkersDialogProps> = ({ open, onClose }) => {
               }}
             >
               <Table>
-                <TableHead>
+                <TableHead
+                  sx={getTableHeaderStyle()}
+                >
                   <TableRow>
                     <TableCell>ID</TableCell>
                     <TableCell>Full Name</TableCell>

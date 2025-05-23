@@ -15,8 +15,8 @@ export const useApi = () => {
   ): Promise<T> => {
     const {
       loadingMessage = 'Loading...',
-      minLoadingTime = 2000,
-      demoDelay = 2000 // Default 2 second delay for demo
+      minLoadingTime = 1000,
+      demoDelay = 1000 // Default 1 second delay for demo
     } = options;
 
     showLoading(loadingMessage);

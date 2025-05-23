@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Typography, Box, Card, Grid, Divider, IconButton } from '@mui/material';
 import DashboardLayout from '../../Common/components/DashboardLayout';
@@ -8,36 +8,68 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import JobEntriesReportDialog from '../components/reports/job-entries/JobEntriesReportDialog';
 
 const reportTypes = [
+  {
+    title: 'Overview',
+    description: 'Overview of all the data',
+    icon: <PieChartIcon fontSize="large" color="primary" />,
+    comingSoon: false,
+    action: 'overview'
+  },
+  {
+    title: 'Saved Job Entries',
+    description: 'View detailed worker job entries',
+    icon: <TimelineIcon fontSize="large" color="primary" />,
+    comingSoon: false,
+    action: 'job-entries'
+  },
   {
     title: 'Worker Performance',
     description: 'View detailed worker performance reports across jobs',
     icon: <BarChartIcon fontSize="large" color="primary" />,
-    comingSoon: false
+    comingSoon: false,
+    action: 'worker-performance'
   },
   {
     title: 'Job Completion',
     description: 'Track job completion rates and statistics',
     icon: <PieChartIcon fontSize="large" color="primary" />,
-    comingSoon: false
+    comingSoon: false,
+    action: 'job-completion'
   },
   {
     title: 'Earnings Report',
     description: 'View earnings by worker, job type, and period',
     icon: <TimelineIcon fontSize="large" color="primary" />,
-    comingSoon: false
+    comingSoon: false,
+    action: 'earnings'
   },
   {
     title: 'Productivity Analysis',
     description: 'Analyze productivity trends and identify improvement areas',
     icon: <DescriptionIcon fontSize="large" color="primary" />,
-    comingSoon: true
+    comingSoon: true,
+    action: 'productivity'
   }
 ];
 
 const WorkPlusReportsLanding: React.FC = () => {
   const theme = useTheme();
+  const [jobEntriesDialogOpen, setJobEntriesDialogOpen] = useState(false);
+
+  const handleReportCardClick = (action: string) => {
+    switch (action) {
+      case 'job-entries':
+        setJobEntriesDialogOpen(true);
+        break;
+      // Add more cases for other report types in the future
+      default:
+        // Do nothing for now or show a "coming soon" message
+        break;
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -59,7 +91,13 @@ const WorkPlusReportsLanding: React.FC = () => {
               '&:hover': {
                 boxShadow: report.comingSoon ? 'none' : theme.shadows[8]
               }
-            }}>
+            }}
+            onClick={() => {
+              if (!report.comingSoon) {
+                handleReportCardClick(report.action);
+              }
+            }}
+            >
               {report.comingSoon && (
                 <Box
                   sx={{
@@ -106,6 +144,12 @@ const WorkPlusReportsLanding: React.FC = () => {
           </Grid>
         ))}
       </Grid>
+
+      {/* Report Dialogs */}
+      <JobEntriesReportDialog 
+        open={jobEntriesDialogOpen}
+        onClose={() => setJobEntriesDialogOpen(false)}
+      />
     </DashboardLayout>
   );
 };

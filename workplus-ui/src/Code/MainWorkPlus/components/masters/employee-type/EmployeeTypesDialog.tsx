@@ -22,6 +22,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { EmployeeType, useEmployeeTypeService } from './employeeTypeService';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface EmployeeTypesDialogProps {
   open: boolean;
@@ -129,7 +130,9 @@ const EmployeeTypesDialog: React.FC<EmployeeTypesDialogProps> = ({ open, onClose
 
         <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', minHeight: '400px' }}>
           <Table>
-            <TableHead>
+            <TableHead
+              sx={getTableHeaderStyle()}
+            >
               <TableRow>
                 <TableCell>ID</TableCell>
                 <TableCell>Type Name</TableCell>

@@ -72,13 +72,12 @@ const BORDER_RADIUS = {
 };
 
 export const getTheme = (mode: 'light' | 'dark') => {
-  // Mode specific variables
-  const BACKGROUND_DEFAULT = mode === 'light' ? '#F6F6F9' : '#1C1C25';
-  const BACKGROUND_PAPER = mode === 'light' ? '#FFFFFF' : '#28293D';
+  // Mode specific variables  
   const TEXT_PRIMARY = mode === 'light' ? '#11142D' : '#FFFFFF';
   const TEXT_SECONDARY = mode === 'light' ? '#808191' : '#A0A3BD';
   const BORDER_COLOR = mode === 'light' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)';
   const HOVER_BACKGROUND = mode === 'light' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.08)';
+  const BACKGROUND_DEFAULT = mode === 'light' ? '#f5f5f5' : '#1a237e';
   
   const SHADOWS = {
     card: mode === 'light' 
@@ -118,8 +117,7 @@ export const getTheme = (mode: 'light' | 'dark') => {
         main: WARNING_MAIN,
       },
       background: {
-        default: BACKGROUND_DEFAULT,
-        paper: BACKGROUND_PAPER,
+ 
       },
       text: {
         primary: TEXT_PRIMARY,
@@ -207,6 +205,16 @@ export const getTheme = (mode: 'light' | 'dark') => {
             width: '100%',
             height: '100%',
           },
+          '.MuiDialog-paper': {
+            backgroundColor: `${BACKGROUND_DEFAULT} !important`,
+            backgroundImage: 'none !important',
+          },
+          // Table header styling - more direct approach
+          'thead tr th': {
+            backgroundColor: `${mode === 'light' ? '#f5f5f5' : '#2c2c2c'} !important`,
+            fontWeight: '600 !important',
+            color: `${TEXT_PRIMARY} !important`,
+          },
           'input': {
             '&[type=number]': {
               MozAppearance: 'textfield',
@@ -255,7 +263,7 @@ export const getTheme = (mode: 'light' | 'dark') => {
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundImage: 'none',
+            backgroundImage: 'none !important',
             borderRadius: BORDER_RADIUS.medium,
           },
           rounded: {
@@ -279,19 +287,6 @@ export const getTheme = (mode: 'light' | 'dark') => {
         styleOverrides: {
           paper: {
             borderRight: 'none',
-          },
-        },
-      },
-      MuiTableCell: {
-        styleOverrides: {
-          head: {
-            backgroundColor: mode === 'light' ? alpha(PRIMARY_MAIN, 0.05) : alpha(PRIMARY_MAIN, 0.15),
-            color: mode === 'light' ? TEXT_PRIMARY : TEXT_PRIMARY,
-            fontWeight: 600,
-          },
-          root: {
-            borderBottom: `1px solid ${BORDER_COLOR}`,
-            padding: `${SPACING.sm}px ${SPACING.md}px`,
           },
         },
       },
@@ -381,7 +376,7 @@ export const getTheme = (mode: 'light' | 'dark') => {
         styleOverrides: {
           paper: {
             boxShadow: SHADOWS.dialog,
-          },
+     },
         },
       },
       MuiMenu: {

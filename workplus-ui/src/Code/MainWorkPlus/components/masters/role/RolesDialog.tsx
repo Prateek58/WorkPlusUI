@@ -17,11 +17,13 @@ import {
   TablePagination,
   InputAdornment,
   Chip,
-  CircularProgress
+  CircularProgress,
+  useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { Role, useRoleService } from './roleService';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface RolesDialogProps {
   open: boolean;
@@ -30,6 +32,7 @@ interface RolesDialogProps {
 
 const RolesDialog: React.FC<RolesDialogProps> = ({ open, onClose }) => {
   const { getRoles } = useRoleService();
+  const theme = useTheme();
 
   const [roles, setRoles] = useState<Role[]>([]);
   const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
@@ -131,7 +134,9 @@ const RolesDialog: React.FC<RolesDialogProps> = ({ open, onClose }) => {
 
         <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', minHeight: '400px' }}>
           <Table>
-            <TableHead>
+            <TableHead
+              sx={getTableHeaderStyle()}
+            >
               <TableRow>
                 <TableCell>ID</TableCell>
                 <TableCell>Name</TableCell>

@@ -31,6 +31,7 @@ import JobFormDialog from './JobFormDialog';
 import { Job, JobCreate, JobType, useJobService } from './jobService';
 import Loader from '../../../../Common/components/Loader';
 import { useConfirm } from '../../../../Common/hooks/useConfirm';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface JobsDialogProps {
   open: boolean;
@@ -229,7 +230,9 @@ const JobsDialog: React.FC<JobsDialogProps> = ({ open, onClose, userId }) => {
 
           <TableContainer component={Paper} sx={{ mt: 2, boxShadow: 'none', minHeight: '400px' }}>
             <Table>
-              <TableHead>
+              <TableHead
+                sx={getTableHeaderStyle()}
+              >
                 <TableRow>
                   <TableCell>Job Name</TableCell>
                   <TableCell>Job Type</TableCell>

@@ -29,6 +29,7 @@ import UserRoleManagement from './UserRoleManagement';
 import Loader from '../../../../Common/components/Loader';
 import { User, useUserService } from './userService';
 import { useUserRoleService, Role } from './userRoleService';
+import { getTableHeaderStyle } from '../../../../../theme/tableStyles';
 
 interface UserRolesDialogProps {
   open: boolean;
@@ -228,7 +229,6 @@ const UserRolesDialog: React.FC<UserRolesDialogProps> = ({ open, onClose }) => {
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: theme.palette.background.default,
             boxShadow: 24,
             borderRadius: 2,
           }
@@ -296,7 +296,7 @@ const UserRolesDialog: React.FC<UserRolesDialogProps> = ({ open, onClose }) => {
               }}
             >
               <Table>
-                <TableHead>
+                <TableHead sx={getTableHeaderStyle()}>
                   <TableRow>
                     <TableCell>ID</TableCell>
                     <TableCell>Username</TableCell>
