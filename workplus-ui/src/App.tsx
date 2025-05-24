@@ -22,6 +22,8 @@ import WorkPlusJobEntryForm from './Code/MainWorkPlus/components/forms/workplus-
 import WorkPlusMastersLanding from './Code/MainWorkPlus/pages/WorkPlusMastersLanding';
 import WorkPlusReportsLanding from './Code/MainWorkPlus/pages/WorkPlusReportsLanding';
 import JobEntryDashboard from './Code/MainWorkPlus/components/reports/dashboard-job-entry/JobEntryDashboard';
+import LMSLanding from './Code/LMS/pages/LMSLanding';
+import AttendanceLanding from './Code/Attendance/pages/AttendanceLanding';
 
 const App: React.FC = () => {
   return (
@@ -47,6 +49,8 @@ const App: React.FC = () => {
                     <Route path="reports" element={<WorkPlusReportsLanding />} />
                     <Route path="workplus/reports" element={<WorkPlusReportsLanding />} />
                     <Route path="workplus/reports/dashboard/job-entry" element={<JobEntryDashboard />} />
+                    <Route path="lms" element={<LMSLanding />} />
+                    <Route path="attendance" element={<AttendanceLanding />} />
                   </Route>
                 </Routes>
               </Router>

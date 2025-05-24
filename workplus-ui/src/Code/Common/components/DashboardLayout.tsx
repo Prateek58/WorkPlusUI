@@ -18,6 +18,7 @@ import {
   MenuItem,
   Divider,
   Stack,
+  Chip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -40,6 +41,8 @@ import {
   DarkMode,
   Help as HelpIcon,
   Logout as LogoutIcon,
+  CalendarToday as CalendarTodayIcon,
+  People as PeopleIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useThemeContext } from '../../../theme/ThemeProvider';
@@ -141,6 +144,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { text: 'Reports', icon: <DescriptionIcon />, path: '/reports' },
       ]
     },
+    { 
+      text: 'Leave Management', 
+      icon: <CalendarTodayIcon />, 
+      path: '/lms',
+      comingSoon: true
+    },
+    { 
+      text: 'Attendance', 
+      icon: <PeopleIcon />, 
+      path: '/attendance',
+      comingSoon: true
+    },
   ];
 
   const drawer = (
@@ -234,6 +249,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   {item.count}
                 </Box>
               )}
+              {item.comingSoon && open && (
+                <Chip 
+                  label="Soon" 
+                  size="small" 
+                  color="warning"
+                  sx={{ 
+                    height: 20, 
+                    fontSize: '0.6rem',
+                    '& .MuiChip-label': { px: 0.5, py: 0 }
+                  }}
+                />
+              )}
               {item.subItems && open && (
                 <IconButton
                   size="small" 
@@ -260,7 +287,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       key={subItem.text}
                       onClick={() => handleNavigate(subItem.path)}
                       sx={{
-                        pl: 4,
+                        pl: 6,
                         borderRadius: 2,
                         mb: 1,
                         cursor: 'pointer',
