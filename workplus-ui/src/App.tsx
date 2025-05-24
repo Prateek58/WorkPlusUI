@@ -21,6 +21,7 @@ import { ThemeContextProvider } from './theme/ThemeProvider';
 import WorkPlusJobEntryForm from './Code/MainWorkPlus/components/forms/workplus-job-entry/WorkPlusJobEntryForm';
 import WorkPlusMastersLanding from './Code/MainWorkPlus/pages/WorkPlusMastersLanding';
 import WorkPlusReportsLanding from './Code/MainWorkPlus/pages/WorkPlusReportsLanding';
+import JobEntryDashboard from './Code/MainWorkPlus/components/reports/dashboard-job-entry/JobEntryDashboard';
 
 const App: React.FC = () => {
   return (
@@ -44,6 +45,8 @@ const App: React.FC = () => {
                     <Route path="work-entry" element={<WorkPlusJobEntryForm />} />
                     <Route path="masters" element={<WorkPlusMastersLanding />} />
                     <Route path="reports" element={<WorkPlusReportsLanding />} />
+                    <Route path="workplus/reports" element={<WorkPlusReportsLanding />} />
+                    <Route path="workplus/reports/dashboard/job-entry" element={<JobEntryDashboard />} />
                   </Route>
                 </Routes>
               </Router>

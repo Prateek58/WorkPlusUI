@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Card, Grid, Typography, IconButton, Chip } from '@mui/material';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Box, Card, Grid, Typography, IconButton, Chip, CircularProgress } from '@mui/material';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
@@ -17,59 +17,172 @@ import WorkIcon from '@mui/icons-material/Work';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArticleIcon from '@mui/icons-material/Article';
 
-// Dummy data
-const dummyJobWorks = [
-  { entryDate: dayjs().format('YYYY-MM-DD'), workName: 'Cutting', employeeName: 'Rahul', qtyHours: 8, totalAmount: 1200 },
-  { entryDate: dayjs().format('YYYY-MM-DD'), workName: 'Stitching', employeeName: 'Priya', qtyHours: 6, totalAmount: 900 },
-  { entryDate: dayjs().format('YYYY-MM-DD'), workName: 'Packing', employeeName: 'Amit', qtyHours: 4, totalAmount: 600 },
-  { entryDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'), workName: 'Cutting', employeeName: 'Rahul', qtyHours: 8, totalAmount: 1200 },
-  { entryDate: dayjs().subtract(1, 'day').format('YYYY-MM-DD'), workName: 'Stitching', employeeName: 'Priya', qtyHours: 8, totalAmount: 1200 },
-  { entryDate: dayjs().subtract(2, 'day').format('YYYY-MM-DD'), workName: 'Packing', employeeName: 'Amit', qtyHours: 8, totalAmount: 1200 },
-];
-
-const dummyWorkers = [
-  { name: 'Rahul', present: true, totalJobs: 45, totalEarnings: 54000 },
-  { name: 'Priya', present: true, totalJobs: 38, totalEarnings: 45600 },
-  { name: 'Amit', present: false, totalJobs: 42, totalEarnings: 50400 },
-  { name: 'Sneha', present: true, totalJobs: 35, totalEarnings: 42000 },
-  { name: 'Rajesh', present: false, totalJobs: 40, totalEarnings: 48000 },
-];
-
-const dummyMonthlyData = [
-  { month: 'Jan 2024', amount: 120000, hours: 960, jobs: 80 },
-  { month: 'Feb 2024', amount: 135000, hours: 1080, jobs: 90 },
-  { month: 'Mar 2024', amount: 150000, hours: 1200, jobs: 100 },
-  { month: 'Apr 2024', amount: 165000, hours: 1320, jobs: 110 },
-  { month: 'May 2024', amount: 180000, hours: 1440, jobs: 120 },
-  { month: 'Jun 2024', amount: 195000, hours: 1560, jobs: 130 },
-];
-
-const dummyJobDistribution = [
-  { id: 1, value: 40, label: 'Cutting' },
-  { id: 2, value: 30, label: 'Stitching' },
-  { id: 3, value: 20, label: 'Packing' },
-  { id: 4, value: 10, label: 'Quality Check' },
-];
+// Import job entry service for real data
+import jobEntryReportService, { 
+  JobEntryReport, 
+  JobEntryFilter,
+  FilterOptions
+} from '../../MainWorkPlus/components/reports/job-entries/jobEntryReportService';
 
 const Dashboard = () => {
   const theme = useTheme();
   const navigate = useNavigate();
 
-  // Calculate today's statistics
-  const today = dayjs().format('YYYY-MM-DD');
-  const todayEntries = dummyJobWorks.filter(entry => entry.entryDate === today);
-  const todayAmount = todayEntries.reduce((sum, entry) => sum + entry.totalAmount, 0);
-  const todayHours = todayEntries.reduce((sum, entry) => sum + entry.qtyHours, 0);
-  
-  // Calculate worker statistics
-  const presentWorkers = dummyWorkers.filter(w => w.present).length;
-  const absentWorkers = dummyWorkers.filter(w => !w.present).length;
-  const totalWorkers = dummyWorkers.length;
-  
-  // Calculate total statistics
-  const totalJobs = dummyWorkers.reduce((sum, w) => sum + w.totalJobs, 0);
-  const totalEarnings = dummyWorkers.reduce((sum, w) => sum + w.totalEarnings, 0);
-  const totalHours = dummyMonthlyData.reduce((sum, m) => sum + m.hours, 0);
+  // State for real data
+  const [loading, setLoading] = useState(true);
+  const [jobEntries, setJobEntries] = useState<JobEntryReport[]>([]);
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>({
+    jobs: [],
+    workers: [],
+    groups: [],
+    entryTypes: []
+  });
+
+  // Fetch real data from APIs
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const filter: JobEntryFilter = {
+          pageNumber: 1,
+          pageSize: 1000 // Get enough data for dashboard
+        };
+        
+        const [reportData, filterData] = await Promise.all([
+          jobEntryReportService.getFilteredJobEntriesReport(filter),
+          jobEntryReportService.getFilterOptions()
+        ]);
+        
+        setJobEntries(reportData.items);
+        setFilterOptions(filterData);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Calculate real dashboard statistics using useMemo for performance
+  const dashboardStats = useMemo(() => {
+    if (!jobEntries.length) {
+      return {
+        todayEntries: [],
+        todayAmount: 0,
+        todayHours: 0,
+        presentWorkers: 0,
+        absentWorkers: 0,
+        totalWorkers: 0,
+        totalJobs: 0,
+        totalEarnings: 0,
+        totalHours: 0,
+        monthlyData: [],
+        topWorkers: [],
+        jobDistribution: []
+      };
+    }
+
+    // Today's data
+    const today = dayjs().format('YYYY-MM-DD');
+    const todayEntries = jobEntries.filter(entry => 
+      entry.createdAt && dayjs(entry.createdAt).format('YYYY-MM-DD') === today
+    );
+    const todayAmount = todayEntries.reduce((sum, entry) => sum + (entry.totalAmount || 0), 0);
+    const todayHours = todayEntries.reduce((sum, entry) => sum + (entry.hoursTaken || 0), 0);
+
+    // Worker statistics
+    const totalWorkers = filterOptions.workers.length;
+    // For attendance, we'll check workers with recent activity (last 2 days)
+    const recentDate = dayjs().subtract(2, 'days');
+    const activeWorkers = new Set(
+      jobEntries
+        .filter(entry => entry.createdAt && dayjs(entry.createdAt).isAfter(recentDate))
+        .map(entry => entry.workerName)
+        .filter(Boolean)
+    );
+    const presentWorkers = activeWorkers.size;
+    const absentWorkers = totalWorkers - presentWorkers;
+
+    // Total statistics
+    const totalJobs = jobEntries.length;
+    const totalEarnings = jobEntries.reduce((sum, entry) => sum + (entry.totalAmount || 0), 0);
+    const totalHours = jobEntries.reduce((sum, entry) => sum + (entry.hoursTaken || 0), 0);
+
+    // Monthly data for bar chart (last 6 months)
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = dayjs().subtract(i, 'month').startOf('month');
+      const monthEnd = dayjs().subtract(i, 'month').endOf('month');
+      const monthEntries = jobEntries.filter(entry => 
+        entry.createdAt && 
+        dayjs(entry.createdAt).isAfter(monthStart) && 
+        dayjs(entry.createdAt).isBefore(monthEnd)
+      );
+      
+      monthlyData.push({
+        month: monthStart.format('MMM YYYY'),
+        amount: monthEntries.reduce((sum, entry) => sum + (entry.totalAmount || 0), 0),
+        hours: monthEntries.reduce((sum, entry) => sum + (entry.hoursTaken || 0), 0),
+        jobs: monthEntries.length
+      });
+    }
+
+    // Top workers by earnings
+    const workerStats = new Map();
+    jobEntries.forEach(entry => {
+      if (entry.workerName) {
+        if (!workerStats.has(entry.workerName)) {
+          workerStats.set(entry.workerName, {
+            name: entry.workerName,
+            totalJobs: 0,
+            totalEarnings: 0,
+            present: activeWorkers.has(entry.workerName)
+          });
+        }
+        const worker = workerStats.get(entry.workerName);
+        worker.totalJobs += 1;
+        worker.totalEarnings += entry.totalAmount || 0;
+      }
+    });
+
+    const topWorkers = Array.from(workerStats.values())
+      .sort((a, b) => b.totalEarnings - a.totalEarnings)
+      .slice(0, 3);
+
+    // Job distribution for pie chart
+    const jobStats = new Map();
+    jobEntries.forEach(entry => {
+      if (entry.jobName) {
+        jobStats.set(entry.jobName, (jobStats.get(entry.jobName) || 0) + 1);
+      }
+    });
+
+    const jobDistribution = Array.from(jobStats.entries())
+      .map(([job, count], index) => ({
+        id: index + 1,
+        value: count,
+        label: job.length > 15 ? job.substring(0, 15) + '...' : job
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6); // Top 6 jobs
+
+    return {
+      todayEntries,
+      todayAmount,
+      todayHours,
+      presentWorkers,
+      absentWorkers,
+      totalWorkers,
+      totalJobs,
+      totalEarnings,
+      totalHours,
+      monthlyData,
+      topWorkers,
+      jobDistribution
+    };
+  }, [jobEntries, filterOptions]);
 
   // Chart container styles
   const chartContainerStyles = {
@@ -83,6 +196,16 @@ const Dashboard = () => {
     width: '100%', 
     height: 250
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress size={60} />
+        </Box>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -129,11 +252,11 @@ const Dashboard = () => {
               Today's Jobs
             </Typography>
             <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
-              {todayEntries.length}
+              {dashboardStats.todayEntries.length}
             </Typography>
             <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                ₹{todayAmount.toLocaleString()}
+                ₹{dashboardStats.todayAmount.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Today's Earnings
@@ -148,11 +271,11 @@ const Dashboard = () => {
               Worker Attendance
             </Typography>
             <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
-              {presentWorkers}/{totalWorkers}
+              {dashboardStats.presentWorkers}/{dashboardStats.totalWorkers}
             </Typography>
             <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="error.main" sx={{ mr: 1 }}>
-                {absentWorkers} Absent
+                {dashboardStats.absentWorkers} Absent
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Today
@@ -167,11 +290,11 @@ const Dashboard = () => {
               Total Jobs
             </Typography>
             <Typography variant="h4" sx={{ mb: 1 }}>
-              {totalJobs}
+              {dashboardStats.totalJobs}
             </Typography>
             <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                ₹{totalEarnings.toLocaleString()}
+                ₹{dashboardStats.totalEarnings.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Total Earnings
@@ -186,11 +309,11 @@ const Dashboard = () => {
               Total Hours
             </Typography>
             <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
-              {totalHours}
+              {dashboardStats.totalHours}
             </Typography>
             <Box sx={flexContainerStyles}>
               <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                {todayHours} Hours
+                {dashboardStats.todayHours} Hours
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Today's Hours
@@ -212,19 +335,19 @@ const Dashboard = () => {
               <BarChart
                 series={[
                   {
-                    data: dummyMonthlyData.map(item => item.amount),
+                    data: dashboardStats.monthlyData.map(item => item.amount),
                     label: 'Earnings',
                     color: theme.palette.primary.main,
                   },
                   {
-                    data: dummyMonthlyData.map(item => item.hours),
+                    data: dashboardStats.monthlyData.map(item => item.hours),
                     label: 'Hours',
                     color: theme.palette.success.main,
                   }
                 ]}
                 xAxis={[{
                   scaleType: 'band',
-                  data: dummyMonthlyData.map(item => item.month),
+                  data: dashboardStats.monthlyData.map(item => item.month),
                 }]}
                 height={250}
               />
@@ -241,22 +364,19 @@ const Dashboard = () => {
               </IconButton>
             </Box>
             <Box sx={{ mt: 1 }}>
-              {dummyWorkers
-                .sort((a, b) => b.totalEarnings - a.totalEarnings)
-                .slice(0, 3)
-                .map((worker, index) => (
-                  <Box key={worker.name} sx={{ mb: 1.5 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      {index + 1}. {worker.name}
-                    </Typography>
-                    <Typography variant="h6">
-                      ₹{worker.totalEarnings.toLocaleString()}
-                    </Typography>
-                    <Typography variant="body2" color="success.main">
-                      {worker.totalJobs} Jobs
-                    </Typography>
-                  </Box>
-                ))}
+              {dashboardStats.topWorkers.map((worker, index) => (
+                <Box key={worker.name} sx={{ mb: 1.5 }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {index + 1}. {worker.name}
+                  </Typography>
+                  <Typography variant="h6">
+                    ₹{worker.totalEarnings.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="success.main">
+                    {worker.totalJobs} Jobs
+                  </Typography>
+                </Box>
+              ))}
             </Box>
           </Card>
         </Grid>
@@ -273,7 +393,7 @@ const Dashboard = () => {
               <PieChart
                 series={[
                   {
-                    data: dummyJobDistribution,
+                    data: dashboardStats.jobDistribution,
                     highlightScope: { faded: 'global', highlighted: 'item' },
                     faded: { innerRadius: 30, additionalRadius: -30 },
                   },

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Typography, Box, Card, Grid, Divider, IconButton } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../Common/components/DashboardLayout';
 import { sectionTitleStyles, cardStyles } from '../../../theme/styleUtils';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -19,8 +20,8 @@ const reportTypes = [
     action: 'job-entries'
   },
   {
-    title: 'Overview',
-    description: 'Overview of all the data',
+    title: 'Dashboard',
+    description: 'Overview of all the data from job work entries',
     icon: <PieChartIcon fontSize="large" color="primary" />,
     comingSoon: false,
     action: 'overview'
@@ -57,12 +58,16 @@ const reportTypes = [
 
 const WorkPlusReportsLanding: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [jobEntriesDialogOpen, setJobEntriesDialogOpen] = useState(false);
 
   const handleReportCardClick = (action: string) => {
     switch (action) {
       case 'job-entries':
         setJobEntriesDialogOpen(true);
+        break;
+      case 'overview':
+        navigate('/workplus/reports/dashboard/job-entry');
         break;
       // Add more cases for other report types in the future
       default:
