@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Card, Grid, Typography, IconButton, Chip, CircularProgress } from '@mui/material';
+import { Box, Card, Grid, Typography, IconButton, Chip, CircularProgress, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
@@ -9,13 +9,19 @@ import dayjs from 'dayjs';
 import { 
   cardStyles, 
   sectionTitleStyles, 
-  flexContainerStyles, 
-  centeredContentStyles 
+  flexContainerStyles
 } from '../../../theme/styleUtils';
 import { useNavigate } from 'react-router-dom';
 import WorkIcon from '@mui/icons-material/Work';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArticleIcon from '@mui/icons-material/Article';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import PeopleIcon from '@mui/icons-material/People';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import GetAppIcon from '@mui/icons-material/GetApp';
 
 // Import job entry service for real data
 import jobEntryReportService, { 
@@ -24,9 +30,15 @@ import jobEntryReportService, {
   FilterOptions
 } from '../../MainWorkPlus/components/reports/job-entries/jobEntryReportService';
 
+// Import the JobEntryDashboard component
+import JobEntryDashboard from '../../MainWorkPlus/components/reports/dashboard-job-entry/JobEntryDashboard';
+
 const Dashboard = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+
+  // State for dashboard switching
+  const [dashboardType, setDashboardType] = useState<string>('default');
 
   // State for real data
   const [loading, setLoading] = useState(true);
@@ -37,6 +49,30 @@ const Dashboard = () => {
     groups: [],
     entryTypes: []
   });
+
+  // Handle dashboard type change
+  const handleDashboardChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newDashboardType: string | null,
+  ) => {
+    if (newDashboardType !== null) {
+      setDashboardType(newDashboardType);
+    }
+  };
+
+  // Get dynamic title based on dashboard type
+  const getDashboardTitle = () => {
+    switch (dashboardType) {
+      case 'work-entries':
+        return 'Work Entry Analytics';
+      case 'lms':
+        return 'Leave Management System';
+      case 'attendance':
+        return 'Attendance Dashboard';
+      default:
+        return 'Dashboard WorkPlus';
+    }
+  };
 
   // Fetch real data from APIs
   useEffect(() => {
@@ -197,7 +233,7 @@ const Dashboard = () => {
     height: 250
   };
 
-  if (loading) {
+  if (loading && dashboardType === 'default') {
     return (
       <DashboardLayout>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -207,13 +243,201 @@ const Dashboard = () => {
     );
   }
 
+  // Coming Soon Dashboard Component
+  const ComingSoonDashboard = ({ title, description }: { title: string; description: string }) => (
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '60vh',
+      textAlign: 'center' 
+    }}>
+      <CalendarTodayIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 2 }} />
+      <Typography variant="h4" gutterBottom color="primary">
+        {title}
+      </Typography>
+      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+        {description}
+      </Typography>
+      <Chip label="Coming Soon" color="warning" variant="outlined" />
+    </Box>
+  );
+
+  // Default dashboard render function
+  const renderDefaultDashboard = () => (
+    <Grid container spacing={2}>
+      {/* Stats Cards */}
+      <Grid item xs={12} md={3}>
+        <Card sx={cardStyles(theme)}>
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            Today's Jobs
+          </Typography>
+          <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
+            {dashboardStats.todayEntries.length}
+          </Typography>
+          <Box sx={flexContainerStyles}>
+            <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
+              ₹{dashboardStats.todayAmount.toLocaleString()}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Today's Earnings
+            </Typography>
+          </Box>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} md={3}>
+        <Card sx={cardStyles(theme)}>
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            Worker Attendance
+          </Typography>
+          <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
+            {dashboardStats.presentWorkers}/{dashboardStats.totalWorkers}
+          </Typography>
+          <Box sx={flexContainerStyles}>
+            <Typography variant="body2" color="error.main" sx={{ mr: 1 }}>
+              {dashboardStats.absentWorkers} Absent
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Today
+            </Typography>
+          </Box>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} md={3}>
+        <Card sx={cardStyles(theme)}>
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            Total Jobs
+          </Typography>
+          <Typography variant="h4" sx={{ mb: 1 }}>
+            {dashboardStats.totalJobs}
+          </Typography>
+          <Box sx={flexContainerStyles}>
+            <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
+              ₹{dashboardStats.totalEarnings.toLocaleString()}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Earnings
+            </Typography>
+          </Box>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} md={3}>
+        <Card sx={cardStyles(theme)}>
+          <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+            Total Hours
+          </Typography>
+          <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
+            {dashboardStats.totalHours}
+          </Typography>
+          <Box sx={flexContainerStyles}>
+            <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
+              {dashboardStats.todayHours} Hours
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Today's Hours
+            </Typography>
+          </Box>
+        </Card>
+      </Grid>
+
+      {/* Charts */}
+      <Grid item xs={12} md={8}>
+        <Card sx={cardStyles(theme)}>
+          <Box sx={chartContainerStyles}>
+            <Typography variant="subtitle1">Monthly Performance</Typography>
+            <IconButton size="small">
+              <MoreVertIcon />
+            </IconButton>
+          </Box>
+          <Box sx={chartBoxStyles}>
+            <BarChart
+              series={[
+                {
+                  data: dashboardStats.monthlyData.map(item => item.amount),
+                  label: 'Earnings',
+                  color: theme.palette.primary.main,
+                },
+                {
+                  data: dashboardStats.monthlyData.map(item => item.hours),
+                  label: 'Hours',
+                  color: theme.palette.success.main,
+                }
+              ]}
+              xAxis={[{
+                scaleType: 'band',
+                data: dashboardStats.monthlyData.map(item => item.month),
+              }]}
+              height={250}
+            />
+          </Box>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Card sx={cardStyles(theme)}>
+          <Box sx={chartContainerStyles}>
+            <Typography variant="subtitle1">Top Performers</Typography>
+            <IconButton size="small">
+              <MoreVertIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{ mt: 1 }}>
+            {dashboardStats.topWorkers.map((worker, index) => (
+              <Box key={worker.name} sx={{ mb: 1.5 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {index + 1}. {worker.name}
+                </Typography>
+                <Typography variant="h6">
+                  ₹{worker.totalEarnings.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="success.main">
+                  {worker.totalJobs} Jobs
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Card sx={cardStyles(theme)}>
+          <Box sx={chartContainerStyles}>
+            <Typography variant="subtitle1">Job Distribution</Typography>
+            <IconButton size="small">
+              <MoreVertIcon />
+            </IconButton>
+          </Box>
+          <Box sx={chartBoxStyles}>
+            <PieChart
+              series={[
+                {
+                  data: dashboardStats.jobDistribution,
+                  highlightScope: { faded: 'global', highlighted: 'item' },
+                  faded: { innerRadius: 30, additionalRadius: -30 },
+                },
+              ]}
+              height={250}
+            />
+          </Box>
+        </Card>
+      </Grid>
+    </Grid>
+  );
+
   return (
     <DashboardLayout>
+      {/* Fixed Header for All Dashboards */}
       <Box sx={{ display: 'flex', alignItems: 'center', mt: 9, mb: 2, flexWrap: 'wrap' }}>
-        <Typography variant="h4" sx={{ ...sectionTitleStyles(theme), mr: 2 }}>
-          Dashboard WorkPlus
+        <Typography variant="h6" sx={{ ...sectionTitleStyles(theme), mr: 2 }}>
+          {getDashboardTitle()}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        
+        {/* Quick Action Links */}
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mr: 2 }}>
           <Chip
             icon={<WorkIcon />}
             label="Work Entry"
@@ -242,168 +466,152 @@ const Dashboard = () => {
             sx={{ fontWeight: 500 }}
           />
         </Box>
+
+        {/* Dashboard Toggle Buttons - Compact with Coming Soon badges */}
+        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+          <ToggleButtonGroup
+            value={dashboardType}
+            exclusive
+            onChange={handleDashboardChange}
+            aria-label="dashboard type"
+            size="small"
+            sx={{ 
+              '& .MuiToggleButton-root': {
+                px: 2,
+                my: 0.5,
+                py: 0.5,
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                minWidth: 70,
+                height: 32,
+                display: 'flex',
+                flexDirection: 'row',
+                gap: 0.5,
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative'
+              },
+              '& .MuiToggleButton-root:first-of-type': {
+                borderTopLeftRadius: 16,
+                borderBottomLeftRadius: 16,
+              },
+              '& .MuiToggleButton-root:last-of-type': {
+                borderTopRightRadius: 16,
+                borderBottomRightRadius: 16,
+              }
+            }}
+          >
+            <ToggleButton value="default" aria-label="default dashboard">
+              <DashboardIcon sx={{ fontSize: '1rem' }} />
+              <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Overview</Typography>
+            </ToggleButton>
+            <ToggleButton value="work-entries" aria-label="work entries dashboard">
+              <AssignmentIcon sx={{ fontSize: '1rem' }} />
+              <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Work</Typography>
+            </ToggleButton>
+            <ToggleButton value="lms" aria-label="lms dashboard" sx={{ position: 'relative' }}>
+              <CalendarTodayIcon sx={{ fontSize: '1rem' }} />
+              <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>LMS</Typography>
+              <Chip 
+                label="Soon" 
+                size="small" 
+                color="warning" 
+                sx={{ 
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  height: 14, 
+                  fontSize: '0.55rem',
+                  '& .MuiChip-label': { px: 0.5, py: 0 }
+                }} 
+              />
+            </ToggleButton>
+            <ToggleButton value="attendance" aria-label="attendance dashboard" sx={{ position: 'relative' }}>
+              <PeopleIcon sx={{ fontSize: '1rem' }} />
+              <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Attend</Typography>
+              <Chip 
+                label="Soon" 
+                size="small" 
+                color="warning" 
+                sx={{ 
+                  position: 'absolute',
+                  top: -6,
+                  right: -6,
+                  height: 14, 
+                  fontSize: '0.55rem',
+                  '& .MuiChip-label': { px: 0.5, py: 0 }
+                }} 
+              />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
 
-      <Grid container spacing={2}>
-        {/* Stats Cards */}
-        <Grid item xs={12} md={3}>
-          <Card sx={cardStyles(theme)}>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              Today's Jobs
-            </Typography>
-            <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
-              {dashboardStats.todayEntries.length}
-            </Typography>
-            <Box sx={flexContainerStyles}>
-              <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                ₹{dashboardStats.todayAmount.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Today's Earnings
-              </Typography>
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card sx={cardStyles(theme)}>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              Worker Attendance
-            </Typography>
-            <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
-              {dashboardStats.presentWorkers}/{dashboardStats.totalWorkers}
-            </Typography>
-            <Box sx={flexContainerStyles}>
-              <Typography variant="body2" color="error.main" sx={{ mr: 1 }}>
-                {dashboardStats.absentWorkers} Absent
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Today
-              </Typography>
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card sx={cardStyles(theme)}>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              Total Jobs
-            </Typography>
-            <Typography variant="h4" sx={{ mb: 1 }}>
-              {dashboardStats.totalJobs}
-            </Typography>
-            <Box sx={flexContainerStyles}>
-              <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                ₹{dashboardStats.totalEarnings.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Earnings
-              </Typography>
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={3}>
-          <Card sx={cardStyles(theme)}>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              Total Hours
-            </Typography>
-            <Typography variant="h4" color="primary.main" sx={{ mb: 1 }}>
-              {dashboardStats.totalHours}
-            </Typography>
-            <Box sx={flexContainerStyles}>
-              <Typography variant="body2" color="success.main" sx={{ mr: 1 }}>
-                {dashboardStats.todayHours} Hours
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Today's Hours
-              </Typography>
-            </Box>
-          </Card>
-        </Grid>
-
-        {/* Charts */}
-        <Grid item xs={12} md={8}>
-          <Card sx={cardStyles(theme)}>
-            <Box sx={chartContainerStyles}>
-              <Typography variant="subtitle1">Monthly Performance</Typography>
-              <IconButton size="small">
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-            <Box sx={chartBoxStyles}>
-              <BarChart
-                series={[
-                  {
-                    data: dashboardStats.monthlyData.map(item => item.amount),
-                    label: 'Earnings',
-                    color: theme.palette.primary.main,
-                  },
-                  {
-                    data: dashboardStats.monthlyData.map(item => item.hours),
-                    label: 'Hours',
-                    color: theme.palette.success.main,
-                  }
-                ]}
-                xAxis={[{
-                  scaleType: 'band',
-                  data: dashboardStats.monthlyData.map(item => item.month),
-                }]}
-                height={250}
-              />
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card sx={cardStyles(theme)}>
-            <Box sx={chartContainerStyles}>
-              <Typography variant="subtitle1">Top Performers</Typography>
-              <IconButton size="small">
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-            <Box sx={{ mt: 1 }}>
-              {dashboardStats.topWorkers.map((worker, index) => (
-                <Box key={worker.name} sx={{ mb: 1.5 }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    {index + 1}. {worker.name}
-                  </Typography>
-                  <Typography variant="h6">
-                    ₹{worker.totalEarnings.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color="success.main">
-                    {worker.totalJobs} Jobs
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Card sx={cardStyles(theme)}>
-            <Box sx={chartContainerStyles}>
-              <Typography variant="subtitle1">Job Distribution</Typography>
-              <IconButton size="small">
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-            <Box sx={chartBoxStyles}>
-              <PieChart
-                series={[
-                  {
-                    data: dashboardStats.jobDistribution,
-                    highlightScope: { faded: 'global', highlighted: 'item' },
-                    faded: { innerRadius: 30, additionalRadius: -30 },
-                  },
-                ]}
-                height={250}
-              />
-            </Box>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Dashboard Content */}
+      {dashboardType === 'default' ? (
+        <>
+          {/* Action buttons for default dashboard - commented out for now, can be re-enabled later
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3, gap: 1 }}>
+            <IconButton onClick={() => window.location.reload()}>
+              <RefreshIcon />
+            </IconButton>
+            <IconButton disabled>
+              <FilterListIcon />
+            </IconButton>
+            <IconButton disabled>
+              <GetAppIcon />
+            </IconButton>
+          </Box>
+          */}
+          {renderDefaultDashboard()}
+        </>
+      ) : null}
+      
+      {dashboardType === 'work-entries' && <JobEntryDashboard embedded={true} />}
+      
+      {dashboardType === 'lms' && (
+        <>
+          {/* Action buttons for LMS dashboard - commented out for now, can be re-enabled later
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3, gap: 1 }}>
+            <IconButton disabled>
+              <RefreshIcon />
+            </IconButton>
+            <IconButton disabled>
+              <FilterListIcon />
+            </IconButton>
+            <IconButton disabled>
+              <GetAppIcon />
+            </IconButton>
+          </Box>
+          */}
+          <ComingSoonDashboard 
+            title="Leave Management System"
+            description="Comprehensive leave request and approval management dashboard"
+          />
+        </>
+      )}
+      
+      {dashboardType === 'attendance' && (
+        <>
+          {/* Action buttons for Attendance dashboard - commented out for now, can be re-enabled later
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3, gap: 1 }}>
+            <IconButton disabled>
+              <RefreshIcon />
+            </IconButton>
+            <IconButton disabled>
+              <FilterListIcon />
+            </IconButton>
+            <IconButton disabled>
+              <GetAppIcon />
+            </IconButton>
+          </Box>
+          */}
+          <ComingSoonDashboard 
+            title="Attendance Dashboard"
+            description="Real-time attendance tracking and analytics"
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 };
