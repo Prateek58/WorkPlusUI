@@ -41,6 +41,7 @@ import lrService from '../services/lrService';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTheme } from '@mui/material/styles';
+import { getTableHeaderStyle } from '../../../theme/tableStyles';
 
 // Configure axios defaults
 axios.defaults.baseURL = 'https://localhost:7160';
@@ -586,21 +587,31 @@ const LorryReceipt = () => {
               </LocalizationProvider>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Unit</InputLabel>
-                <Select
-                  value={filters.unitId}
-                  label="Unit"
-                  onChange={(e) => handleFilterChange('unitId', e.target.value)}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  {Array.isArray(units) && units.map((unit) => (
-                    <MenuItem key={unit.unitId} value={unit.unitId.toString()}>
-                      {unit.unitName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={units}
+                getOptionLabel={(option) => option.unitName}
+                value={units.find(unit => unit.unitId.toString() === filters.unitId) || null}
+                onChange={(event, newValue) => {
+                  handleFilterChange('unitId', newValue ? newValue.unitId.toString() : '');
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Unit"
+                    placeholder="Select or search unit"
+                  />
+                )}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={option.unitId} {...otherProps}>
+                      {option.unitName}
+                    </li>
+                  );
+                }}
+                noOptionsText="No units found"
+              />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Autocomplete
@@ -653,38 +664,63 @@ const LorryReceipt = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Transporter</InputLabel>
-                <Select
-                  value={filters.transporterId}
-                  label="Transporter"
-                  onChange={(e) => handleFilterChange('transporterId', e.target.value)}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  {Array.isArray(transporters) && transporters.map((transporter) => (
-                    <MenuItem key={transporter.transporterId} value={transporter.transporterId.toString()}>
-                      {transporter.transporterName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={transporters}
+                getOptionLabel={(option) => option.transporterName}
+                value={transporters.find(transporter => transporter.transporterId.toString() === filters.transporterId) || null}
+                onChange={(event, newValue) => {
+                  handleFilterChange('transporterId', newValue ? newValue.transporterId.toString() : '');
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Transporter"
+                    placeholder="Select or search transporter"
+                  />
+                )}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={option.transporterId} {...otherProps}>
+                      {option.transporterName}
+                    </li>
+                  );
+                }}
+                noOptionsText="No transporters found"
+              />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>City</InputLabel>
-                <Select
-                  value={filters.cityId}
-                  label="City"
-                  onChange={(e) => handleFilterChange('cityId', e.target.value)}
-                >
-                  <MenuItem value="">All</MenuItem>
-                  {Array.isArray(cities) && cities.map((city) => (
-                    <MenuItem key={city.cityId} value={city.cityId.toString()}>
-                      {city.cityName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={cities}
+                getOptionLabel={(option) => option.cityName}
+                value={cities.find(city => city.cityName === filters.cityId) || null}
+                onChange={(event, newValue) => {
+                  if (newValue) {
+                    // Always use cityName for filtering since cityId can be null
+                    handleFilterChange('cityId', newValue.cityName);
+                  } else {
+                    handleFilterChange('cityId', '');
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="City"
+                    placeholder="Select or search city"
+                  />
+                )}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={`${option.cityId}-${option.cityName}`} {...otherProps}>
+                      {option.cityName}
+                    </li>
+                  );
+                }}
+                noOptionsText="No cities found"
+              />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
@@ -833,29 +869,35 @@ const LorryReceipt = () => {
         <Paper>
           <TableContainer>
             <Table>
-              <TableHead>
+              <TableHead sx={getTableHeaderStyle()}>
                 <TableRow>
                   <TableCell>Unit</TableCell>
                   <TableCell>Bill Date</TableCell>
                   <TableCell>Bill No</TableCell>
                   <TableCell>Party</TableCell>
-                  <TableCell>City Name</TableCell>
+                  <TableCell>City</TableCell>
                   <TableCell>Transporter</TableCell>
-                  <TableCell>L.R. Weight</TableCell>
-                  <TableCell>L.R. Rate</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>LR No</TableCell>
+                  <TableCell>LR Date</TableCell>
+                  <TableCell align="right">LR Weight</TableCell>
+                  <TableCell align="right">Rate/Qtl</TableCell>
+                  <TableCell align="right">LR Qty</TableCell>
+                  <TableCell align="right">LR Amount</TableCell>
+                  <TableCell align="right">Freight</TableCell>
+                  <TableCell align="right">Total Qty</TableCell>
+                  <TableCell>Truck No</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={15} align="center">
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : !Array.isArray(lrEntries) || lrEntries.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} align="center">
+                    <TableCell colSpan={15} align="center">
                       No records found
                     </TableCell>
                   </TableRow>
@@ -868,57 +910,163 @@ const LorryReceipt = () => {
                       <TableCell>{entry.partyName}</TableCell>
                       <TableCell>{entry.cityName}</TableCell>
                       <TableCell>{entry.transporterName}</TableCell>
-                      <TableCell align="right">{entry.lrWeight?.toFixed(2)}</TableCell>
-                      <TableCell align="right">{entry.ratePerQtl?.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Tooltip title="Edit">
-                          <IconButton size="small" sx={{ color: 'primary.main' }}>
-                            ✏️
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton size="small" sx={{ color: 'error.main' }}>
-                            🗑️
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
+                      <TableCell>{entry.lrNo}</TableCell>
+                      <TableCell>{entry.lrDate ? dayjs(entry.lrDate).format('DD/MM/YYYY') : '-'}</TableCell>
+                      <TableCell align="right">{entry.lrWeight?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell align="right">{entry.ratePerQtl?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell align="right">{entry.lrQty?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell align="right">₹{entry.lrAmount?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell align="right">₹{entry.freight?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell align="right">{entry.totalQty?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>{entry.truckNo || '-'}</TableCell>
                     </TableRow>
                   ))
-                )}
-                {/* Add total row at the bottom if we have entries */}
-                {Array.isArray(lrEntries) && lrEntries.length > 0 && (
-                  <TableRow 
-                    sx={{ 
-                      fontWeight: 'bold',
-                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                        ? theme.palette.grey[800] 
-                        : theme.palette.grey[100],
-                      '& td': { 
-                        borderTop: (theme) => `2px solid ${theme.palette.divider}`,
-                        fontSize: '1.1rem',
-                        color: (theme) => theme.palette.text.primary,
-                        fontWeight: 'bold'
-                      }
-                    }}
-                  >
-                    <TableCell colSpan={6} align="right" sx={{ 
-                      fontWeight: 'bold',
-                      color: (theme) => theme.palette.text.primary
-                    }}>
-                      Total Weight:
-                    </TableCell>
-                    <TableCell align="right" sx={{ 
-                      fontWeight: 'bold', 
-                      color: (theme) => theme.palette.primary.main
-                    }}>
-                      {lrEntries.reduce((sum, entry) => sum + (entry.lrWeight || 0), 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell colSpan={2}></TableCell>
-                  </TableRow>
                 )}
               </TableBody>
             </Table>
           </TableContainer>
+          
+          {/* Comprehensive footer row outside table for full width */}
+          {Array.isArray(lrEntries) && lrEntries.length > 0 && (
+            <Box 
+              sx={{ 
+                backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                  ? theme.palette.grey[800] 
+                  : theme.palette.grey[100],
+                borderTop: (theme) => `2px solid ${theme.palette.divider}`,
+                p: 2,
+                overflow: 'auto'
+              }}
+            >
+              <Grid container spacing={2} sx={{ minWidth: '100%' }}>
+                <Grid item xs={12} md={2}>
+                  <Typography variant="h6" sx={{ 
+                    fontWeight: 'bold',
+                    color: (theme) => theme.palette.text.primary,
+                    fontSize: '1rem',
+                    textAlign: 'center'
+                  }}>
+                    TOTALS
+                    <br />
+                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                      ({lrEntries.length} records)
+                    </Typography>
+                  </Typography>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Weight
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {lrEntries.reduce((sum, entry) => sum + (entry.lrWeight || 0), 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Avg Rate
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {(() => {
+                        const validEntries = lrEntries.filter(entry => entry.ratePerQtl && entry.ratePerQtl > 0);
+                        const avgRate = validEntries.length > 0 
+                          ? validEntries.reduce((sum, entry) => sum + (entry.ratePerQtl || 0), 0) / validEntries.length
+                          : 0;
+                        return avgRate.toFixed(2);
+                      })()}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      LR Qty
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {lrEntries.reduce((sum, entry) => sum + (entry.lrQty || 0), 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.success.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      LR Amount
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      ₹{lrEntries.reduce((sum, entry) => sum + (entry.lrAmount || 0), 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.success.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Freight
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      ₹{lrEntries.reduce((sum, entry) => sum + (entry.freight || 0), 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Total Qty
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {lrEntries.reduce((sum, entry) => sum + (entry.totalQty || 0), 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold',
+                      color: (theme) => theme.palette.info.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Trucks
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {lrEntries.filter(entry => entry.truckNo && entry.truckNo.trim()).length}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
           {/* Pagination */}
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
             <Pagination
