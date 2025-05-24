@@ -99,7 +99,7 @@ const WorkPlusMastersLanding: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box p={3} mt={3}>
+      <Box p={3} mt={5}>
         <Typography variant="h4" gutterBottom>
           Master Data
         </Typography>

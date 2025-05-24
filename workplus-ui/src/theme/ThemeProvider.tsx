@@ -64,23 +64,27 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           ...(mode === 'dark'
             ? {
                 primary: {
-                  main: '#657f936e',
+                  main: '#E6AF2F',
                 },
                 secondary: {
                   main: '#f48fb1',
                 },
                 background: {
                   default: '#0a1929',
-                  paper: '#171e3e',
+                  paper: '#171b35',
                 },
               }
             : {
                 primary: {
                   //main: '#261c68',
-                  main: '#422266',
+                  main: '#ba8b34',
                 },
                 secondary: {
                   main: '#dc004e',
+                },
+                background: {
+                  default: '#FFFFFF',
+                  paper: '#F4F4F1',
                 },
               }),
         },

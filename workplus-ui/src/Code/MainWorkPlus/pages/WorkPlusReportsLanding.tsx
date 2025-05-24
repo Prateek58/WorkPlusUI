@@ -12,18 +12,18 @@ import JobEntriesReportDialog from '../components/reports/job-entries/JobEntries
 
 const reportTypes = [
   {
-    title: 'Overview',
-    description: 'Overview of all the data',
-    icon: <PieChartIcon fontSize="large" color="primary" />,
-    comingSoon: false,
-    action: 'overview'
-  },
-  {
     title: 'Saved Job Entries',
     description: 'View detailed worker job entries',
     icon: <TimelineIcon fontSize="large" color="primary" />,
     comingSoon: false,
     action: 'job-entries'
+  },
+  {
+    title: 'Overview',
+    description: 'Overview of all the data',
+    icon: <PieChartIcon fontSize="large" color="primary" />,
+    comingSoon: false,
+    action: 'overview'
   },
   {
     title: 'Worker Performance',
