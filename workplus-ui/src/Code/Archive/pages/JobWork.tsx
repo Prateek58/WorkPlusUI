@@ -44,6 +44,7 @@ import DashboardLayout from '../../Common/components/DashboardLayout';
 import jobWorkService from '../services/jobWorkService';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { useTheme } from '@mui/material/styles';
 
 // Configure axios defaults
 axios.defaults.baseURL = 'https://localhost:7160';
@@ -155,6 +156,7 @@ interface ColumnOption {
 }
 
 const JobWork = () => {
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobWorks, setJobWorks] = useState<any[]>([]);
@@ -1201,17 +1203,27 @@ const JobWork = () => {
                   <TableRow 
                     sx={{ 
                       fontWeight: 'bold',
-                      backgroundColor: '#f5f5f5',
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                        ? theme.palette.grey[800] 
+                        : theme.palette.grey[100],
                       '& td': { 
-                        borderTop: '2px solid #ddd',
-                        fontSize: '1.1rem'
+                        borderTop: (theme) => `2px solid ${theme.palette.divider}`,
+                        fontSize: '1.1rem',
+                        color: (theme) => theme.palette.text.primary,
+                        fontWeight: 'bold'
                       }
                     }}
                   >
-                    <TableCell colSpan={8} align="right" sx={{ fontWeight: 'bold' }}>
+                    <TableCell colSpan={8} align="right" sx={{ 
+                      fontWeight: 'bold',
+                      color: (theme) => theme.palette.text.primary
+                    }}>
                       Total:
                     </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                    <TableCell align="right" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main
+                    }}>
                       ₹{jobWorks.reduce((sum, job) => sum + (job.totalAmount || 0), 0).toFixed(2)}
                     </TableCell>
                   </TableRow>
