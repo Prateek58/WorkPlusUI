@@ -16,6 +16,7 @@ import Settings from './Code/Common/pages/Settings';
 import Help from './Code/Common/pages/Help';
 import JobWork from './Code/Archive/pages/JobWork';
 import LorryReceipt from './Code/Archive/pages/LorryReceipt';
+import LRPage from './Code/LR/pages/LRPage';
 import PrivateRoute from './Code/Common/components/PrivateRoute';
 import { ThemeContextProvider } from './theme/ThemeProvider';
 import WorkPlusJobEntryForm from './Code/MainWorkPlus/components/forms/workplus-job-entry/WorkPlusJobEntryForm';
@@ -45,6 +46,7 @@ const App: React.FC = () => {
                     <Route path="help" element={<Help />} />
                     <Route path="job-work" element={<JobWork />} />
                     <Route path="lorry-receipt" element={<LorryReceipt />} />
+                    <Route path="lr" element={<LRPage />} />
                     <Route path="work-entry" element={<WorkPlusJobEntryForm />} />
                     <Route path="masters" element={<WorkPlusMastersLanding />} />
                     <Route path="reports" element={<WorkPlusReportsLanding />} />

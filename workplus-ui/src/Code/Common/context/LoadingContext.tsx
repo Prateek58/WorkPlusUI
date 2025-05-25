@@ -19,33 +19,15 @@ export const useLoading = () => {
 export const LoadingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('Loading...');
-  const [startTime, setStartTime] = useState<number | null>(null);
 
   const showLoading = useCallback((customMessage?: string) => {
     setMessage(customMessage || 'Loading...');
     setLoading(true);
-    setStartTime(Date.now());
   }, []);
 
   const hideLoading = useCallback(() => {
-    if (startTime) {
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 2000 - elapsedTime);
-
-      if (remainingTime > 0) {
-        setTimeout(() => {
-          setLoading(false);
-          setStartTime(null);
-        }, remainingTime);
-      } else {
-        setLoading(false);
-        setStartTime(null);
-      }
-    } else {
-      setLoading(false);
-      setStartTime(null);
-    }
-  }, [startTime]);
+    setLoading(false);
+  }, []);
 
   return (
     <LoadingContext.Provider value={{ showLoading, hideLoading }}>
