@@ -32,6 +32,7 @@ import {
   Check as ApproveIcon,
   Close as RejectIcon,
   AccountBalance as BalanceIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import { useHRService, LeaveRequest, Worker, LeaveType } from '../../services/hrService';
@@ -39,6 +40,7 @@ import LeaveRequestForm from '../components/LeaveRequestForm';
 import LeaveBalanceForm from '../components/LeaveBalanceForm';
 import { useConfirm } from '../../../Common/hooks/useConfirm';
 import DashboardLayout from '../../../Common/components/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,6 +66,7 @@ function TabPanel(props: TabPanelProps) {
 const LeavePage: React.FC = () => {
   const hrService = useHRService();
   const { showConfirmDialog } = useConfirm();
+  const navigate = useNavigate();
   
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -205,12 +208,23 @@ const LeavePage: React.FC = () => {
   const approvedCount = leaveRequests.filter(r => r.status === 'Approved').length;
   const rejectedCount = leaveRequests.filter(r => r.status === 'Rejected').length;
 
+  // Navigate back function
+  const handleBack = () => {
+    navigate('/hr');
+  };
+
   return (
     <DashboardLayout>
       <Box sx={{ p: 3, mt: 8 }}>
-      <Typography variant="h4" gutterBottom>
-        Leave Management
-      </Typography>
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <IconButton onClick={handleBack} sx={{ mr: 2 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" gutterBottom sx={{ mb: 0, flexGrow: 1 }}>
+          Leave Management
+        </Typography>
+      </Box>
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>

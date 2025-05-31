@@ -6,7 +6,8 @@ import {
   CardContent,
   Typography,
   useTheme,
-  CardActionArea
+  CardActionArea,
+  IconButton
 } from '@mui/material';
 import DashboardLayout from '../../Common/components/DashboardLayout';
 import PeopleIcon from '@mui/icons-material/People';
@@ -18,6 +19,8 @@ import BusinessIcon from '@mui/icons-material/Business';
 import PersonIcon from '@mui/icons-material/Person';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useNavigate } from 'react-router-dom';
 import WorkersDialog from '../components/masters/worker/WorkersDialog';
 import UsersDialog from '../components/masters/user/UsersDialog';
 import JobGroupsDialog from '../components/masters/job-group/JobGroupsDialog';
@@ -30,6 +33,7 @@ import RolesDialog from '../components/masters/role/RolesDialog';
 
 const WorkPlusMastersLanding: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [workersDialogOpen, setWorkersDialogOpen] = useState(false);
   const [usersDialogOpen, setUsersDialogOpen] = useState(false);
   const [jobGroupsDialogOpen, setJobGroupsDialogOpen] = useState(false);
@@ -99,10 +103,16 @@ const WorkPlusMastersLanding: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box p={3} mt={5}>
-        <Typography variant="h4" gutterBottom>
-          Master Data
-        </Typography>
+      <Box p={3} >
+        {/* Header Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, mt:8 }}>
+          <IconButton onClick={() => navigate('/')} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h4" gutterBottom sx={{ mb: 0, flexGrow: 1 }}>
+            Master Data
+          </Typography>
+        </Box>
         <Grid container spacing={3}>
           {masterItems.map((item, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>

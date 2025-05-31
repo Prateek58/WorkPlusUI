@@ -35,6 +35,7 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import WorkIcon from '@mui/icons-material/Work';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -251,7 +252,7 @@ const WorkerPerformanceReportDialog: React.FC<WorkerPerformanceReportDialogProps
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ mt: 2, pt: 1 }}>
+      <DialogContent sx={{ mt: 4, pt: 2 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 1 }}>
             {error}

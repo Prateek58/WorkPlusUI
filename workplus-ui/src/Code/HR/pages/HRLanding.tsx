@@ -9,10 +9,12 @@ import {
   Button,
   Paper,
   Avatar,
+  IconButton,
 } from '@mui/material';
 import {
   AccessTime as AttendanceIcon,
   BeachAccess as LeaveIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../Common/components/DashboardLayout';
@@ -42,11 +44,18 @@ const HRLanding: React.FC = () => {
   return (
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Paper sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-        <Typography variant="h3" gutterBottom fontWeight="bold">
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 , mt:8}}>
+        <IconButton onClick={() => navigate('/')} sx={{ mr: 2 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h3" sx={{ mb: 0, flexGrow: 1, fontWeight: 'bold' }}>
           Human Resources Management
         </Typography>
+      </Box>
+
+      {/* Header */}
+      <Paper sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <Typography variant="h6" sx={{ opacity: 0.9 }}>
           Streamline your workforce management with comprehensive HR tools for attendance tracking, 
           leave management, and employee administration.

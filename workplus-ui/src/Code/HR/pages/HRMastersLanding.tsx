@@ -6,7 +6,8 @@ import {
   CardContent,
   Typography,
   useTheme,
-  CardActionArea
+  CardActionArea,
+  IconButton
 } from '@mui/material';
 import DashboardLayout from '../../Common/components/DashboardLayout';
 import {
@@ -14,7 +15,9 @@ import {
   EventNote as HolidayIcon,
   CalendarToday as CalendarConfigIcon,
   Settings as ConfigIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import LeaveTypesDialog from '../components/masters/leave-type/LeaveTypesDialog';
 import HolidaysDialog from '../components/masters/holiday/HolidaysDialog';
 import CalendarConfigDialog from '../components/masters/calendar-config/CalendarConfigDialog';
@@ -22,6 +25,7 @@ import HRConfigDialog from '../components/masters/hr-config/HRConfigDialog';
 
 const HRMastersLanding: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [leaveTypesDialogOpen, setLeaveTypesDialogOpen] = useState(false);
   const [holidaysDialogOpen, setHolidaysDialogOpen] = useState(false);
   const [calendarConfigDialogOpen, setCalendarConfigDialogOpen] = useState(false);
@@ -65,12 +69,20 @@ const HRMastersLanding: React.FC = () => {
   return (
     <DashboardLayout>
       <Box p={3} mt={5}>
-        <Typography variant="h4" gutterBottom>
-          HR Master Data
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Configure and manage HR master data including leave types, holidays, calendar settings, and system configuration.
-        </Typography>
+        {/* Header Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, mt:5 }}>
+          <IconButton onClick={() => navigate('/hr')} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h4" gutterBottom sx={{ mb: 1 }}>
+              HR Master Data
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              Configure and manage HR master data including leave types, holidays, calendar settings, and system configuration.
+            </Typography>
+          </Box>
+        </Box>
         
         <Grid container spacing={3}>
           {masterItems.map((item, index) => (

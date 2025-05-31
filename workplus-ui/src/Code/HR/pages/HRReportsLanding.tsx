@@ -16,6 +16,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Import the new dialog components
 import WorkerPerformanceDialog from '../components/dialogs/WorkerPerformanceDialog';
@@ -197,12 +198,19 @@ const HRReportsLanding: React.FC = () => {
     <DashboardLayout>
       <Box sx={{ mt: 9, mb: 4, px: 3 }}>
         {/* Header */}
-        <Typography variant="h4" sx={{ ...sectionTitleStyles(theme), mb: 1 }}>
-          HR Reports & Analytics
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Comprehensive reporting and analytics for attendance tracking and leave management
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <IconButton onClick={() => navigate('/hr')} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h4" sx={{ ...sectionTitleStyles(theme), mb: 1 }}>
+              HR Reports & Analytics
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Comprehensive reporting and analytics for attendance tracking and leave management
+            </Typography>
+          </Box>
+        </Box>
 
         {/* Quick Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>

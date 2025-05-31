@@ -44,6 +44,8 @@ import {
   tableCellHeaderStyles
 } from '../../../../../theme/styleUtils';
 import DashboardLayout from '../../../../Common/components/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Type for form data
 interface FormData {
@@ -66,6 +68,7 @@ interface FormData {
 
 const WorkPlusJobEntryForm: React.FC = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
   
   // State for form data
   const [formData, setFormData] = useState<FormData>({
@@ -422,11 +425,38 @@ const WorkPlusJobEntryForm: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" sx={sectionTitleStyles(theme)}>
-          Work Recording
-        </Typography>
-        
+    <Box p={3} >
+    {/* Header Section */}
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      mb: 3, 
+      mt: 8,
+      gap: 2 
+    }}>
+      <IconButton 
+        onClick={() => navigate('/')} 
+        sx={{ 
+          p: 1,
+          alignSelf: 'center'
+        }}
+      >
+        <ArrowBackIcon />
+      </IconButton>
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          color: theme.palette.text.primary,
+          fontWeight: 600,
+          fontSize: '1.75rem',
+          lineHeight: 1.2,
+          margin: 0,
+          flexGrow: 1
+        }}
+      >
+        Work Recording
+      </Typography>
+    </Box>
         <Paper sx={formContainerStyles(theme)}>
           <Grid container spacing={3}>
             {/* Left Column - Input Fields */}

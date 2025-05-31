@@ -34,6 +34,7 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PersonIcon from '@mui/icons-material/Person';
@@ -291,7 +292,7 @@ const EarningsReportDialog: React.FC<EarningsReportDialogProps> = ({ open, onClo
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={{ mt: 2, pt: 1 }}>
+      <DialogContent sx={{ mt: 4, pt: 2 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 1 }}>
             {error}

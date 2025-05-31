@@ -38,6 +38,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import DashboardLayout from '../../Common/components/DashboardLayout';
@@ -45,6 +46,7 @@ import jobWorkService from '../services/jobWorkService';
 import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 // Configure axios defaults
 axios.defaults.baseURL = 'https://localhost:7160';
@@ -204,6 +206,8 @@ const JobWork = () => {
     { id: 'isApproved', label: 'Is Approved', selected: false },
     { id: 'remarks', label: 'Remarks', selected: false },
   ]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchInitialData();
@@ -842,9 +846,15 @@ const JobWork = () => {
   return (
     <DashboardLayout>
       <Box sx={{ p: 3 }}>
-        <Typography variant="h4" sx={{ mb: 3, mt: 4 }}>
-          Job Works
-        </Typography>
+        {/* Header Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, mt: 8 }}>
+          <IconButton onClick={() => navigate('/')} sx={{ mr: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h4" sx={{ mb: 0, flexGrow: 1 }}>
+            Job Works
+          </Typography>
+        </Box>
 
         {error && (
           <Paper sx={{ p: 2, mb: 3, bgcolor: 'error.light' }}>

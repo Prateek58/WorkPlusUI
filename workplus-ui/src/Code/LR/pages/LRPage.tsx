@@ -31,12 +31,14 @@ import {
   Business as BusinessIcon,
   People as PeopleIcon,
   LocationCity as CityIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import DashboardLayout from '../../Common/components/DashboardLayout';
 import { useLRService } from '../services/lrService';
 import type { LREntry } from '../services/lrService';
 import LREntryForm from '../components/LREntryForm';
 import LRViewDialog from '../components/LRViewDialog';
+import { useNavigate } from 'react-router-dom';
 
 interface LRStats {
   totalEntries: number;
@@ -82,6 +84,7 @@ const LRPage: React.FC = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
 
   const { getLREntries } = useLRService();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -169,12 +172,17 @@ const LRPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <Box sx={{ width: '100%', mt: 8 }}>
+      <Box sx={{ width: '100%' }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            LR Management
-          </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3,mt:8 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, mt:4 }}>
+        <IconButton onClick={() => navigate('/')} sx={{ mr: 2 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4">
+          LR Manage
+        </Typography>
+      </Box>
           <Button
             variant="contained"
             startIcon={<AddIcon />}

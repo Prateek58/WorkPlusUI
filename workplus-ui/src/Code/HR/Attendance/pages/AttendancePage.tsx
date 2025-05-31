@@ -32,6 +32,7 @@ import {
   Groups as GroupsIcon,
   Assessment as ReportIcon,
   Refresh as RefreshIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
@@ -40,10 +41,12 @@ import AttendanceForm from '../components/AttendanceForm';
 import BulkAttendanceForm from '../components/BulkAttendanceForm';
 import { useConfirm } from '../../../Common/hooks/useConfirm';
 import DashboardLayout from '../../../Common/components/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
 
 const AttendancePage: React.FC = () => {
   const hrService = useHRService();
   const { showConfirmDialog } = useConfirm();
+  const navigate = useNavigate();
   
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -174,12 +177,23 @@ const AttendancePage: React.FC = () => {
     return filterDate.format('DD/MM/YYYY');
   };
 
+  // Navigate back function
+  const handleBack = () => {
+    navigate('/hr');
+  };
+
   return (
     <DashboardLayout>
       <Box sx={{ p: 3, mt: 8 }}>
-      <Typography variant="h4" gutterBottom>
-        Attendance Management
-      </Typography>
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <IconButton onClick={handleBack} sx={{ mr: 2 }}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" gutterBottom sx={{ mb: 0, flexGrow: 1 }}>
+          Attendance Management
+        </Typography>
+      </Box>
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
