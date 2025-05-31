@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -138,6 +138,7 @@ interface ColumnOption {
 
 const LorryReceipt = () => {
   const [loading, setLoading] = useState(false);
+  const [partySearchLoading, setPartySearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lrEntries, setLrEntries] = useState<any[]>([]);
   const [filters, setFilters] = useState<FilterState>({
@@ -167,6 +168,9 @@ const LorryReceipt = () => {
   
   // Key state to force re-render of Autocomplete
   const [autocompleteKey, setAutocompleteKey] = useState(0);
+  
+  // Ref to prevent duplicate initialization in strict mode
+  const isInitialized = useRef(false);
 
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [exportType, setExportType] = useState<string | null>(null);
@@ -192,13 +196,89 @@ const LorryReceipt = () => {
 
   const theme = useTheme();
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
+  // Memoize footer calculations to improve performance
+  const footerTotals = useMemo(() => {
+    if (!Array.isArray(lrEntries) || lrEntries.length === 0) {
+      return {
+        totalWeight: 0,
+        avgRate: 0,
+        totalLrQty: 0,
+        totalLrAmount: 0,
+        totalFreight: 0,
+        totalQty: 0,
+        totalTrucks: 0
+      };
+    }
+
+    const totalWeight = lrEntries.reduce((sum, entry) => sum + (entry.lrWeight || 0), 0);
+    const totalLrQty = lrEntries.reduce((sum, entry) => sum + (entry.lrQty || 0), 0);
+    const totalLrAmount = lrEntries.reduce((sum, entry) => sum + (entry.lrAmount || 0), 0);
+    const totalFreight = lrEntries.reduce((sum, entry) => sum + (entry.freight || 0), 0);
+    const totalQty = lrEntries.reduce((sum, entry) => sum + (entry.totalQty || 0), 0);
+    const totalTrucks = lrEntries.filter(entry => entry.truckNo && entry.truckNo.trim()).length;
+    
+    const validEntries = lrEntries.filter(entry => entry.ratePerQtl && entry.ratePerQtl > 0);
+    const avgRate = validEntries.length > 0 
+      ? validEntries.reduce((sum, entry) => sum + (entry.ratePerQtl || 0), 0) / validEntries.length
+      : 0;
+
+    return {
+      totalWeight,
+      avgRate,
+      totalLrQty,
+      totalLrAmount,
+      totalFreight,
+      totalQty,
+      totalTrucks
+    };
+  }, [lrEntries]);
 
   useEffect(() => {
+    const initializeData = async () => {
+      // First load the master data (dropdowns)
+      await fetchInitialData();
+      
+      // Then load some initial LR entries to populate the grid
+      try {
+        console.log('Loading initial LR entries...');
+        const response = await lrService.getLREntries({
+          startDate: null,
+          endDate: null,
+          unitId: '',
+          partyId: '',
+          transporterId: '',
+          cityId: '',
+          billNo: '',
+          lrNo: '',
+          truckNo: '',
+          page: 1,
+          pageSize: 10,
+          sortBy: 'lrDate',
+          sortOrder: 'desc',
+        });
+        setLrEntries(response.data);
+        setPagination(prev => ({
+          ...prev,
+          total: response.total
+        }));
+        console.log('Initial LR entries loaded:', response.data.length, 'entries');
+      } catch (error) {
+        console.error('Error loading initial LR entries:', error);
+        setError('Failed to load LR entries. Please try using the Search button.');
+      }
+    };
+    
+    initializeData();
+  }, []);
+
+  // Debounced party search to avoid too many API calls
+  useEffect(() => {
     if (partyInputValue.length >= 2) {
-      fetchParties(partyInputValue);
+      const debounceTimer = setTimeout(() => {
+        fetchParties(partyInputValue);
+      }, 300); // 300ms delay
+      
+      return () => clearTimeout(debounceTimer);
     }
   }, [partyInputValue]);
 
@@ -207,17 +287,34 @@ const LorryReceipt = () => {
       setLoading(true);
       setError(null);
       
-      const [unitsResponse, partiesResponse, transportersResponse, citiesResponse] = await Promise.all([
-        axios.get('/api/LR/units'),
-        axios.get('/api/LR/parties'),
-        axios.get('/api/LR/transporters'),
-        axios.get('/api/LR/cities'),
-      ]);
+      // Fetch data with individual error handling to prevent one failed request from breaking all
+      const promises = [
+        axios.get('/api/Archive/LR/units').catch(err => {
+          console.error('Failed to load units:', err);
+          return { data: [] };
+        }),
+        axios.get('/api/Archive/LR/parties').catch(err => {
+          console.error('Failed to load parties:', err);
+          return { data: [] };
+        }),
+        axios.get('/api/Archive/LR/transporters').catch(err => {
+          console.error('Failed to load transporters:', err);
+          return { data: [] };
+        }),
+        axios.get('/api/Archive/LR/cities').catch(err => {
+          console.error('Failed to load cities:', err);
+          return { data: [] };
+        }),
+      ];
+
+      const [unitsResponse, partiesResponse, transportersResponse, citiesResponse] = await Promise.all(promises);
 
       setUnits(unitsResponse.data);
       setParties(partiesResponse.data);
       setTransporters(transportersResponse.data);
       setCities(citiesResponse.data);
+      
+      console.log('Initial data loaded successfully');
     } catch (error) {
       console.error('Error fetching initial data:', error);
       setError('Failed to load initial data. Please refresh the page.');
@@ -288,16 +385,21 @@ const LorryReceipt = () => {
     setError(null);
   };
 
-  const fetchParties = async (searchTerm: string) => {
+  const fetchParties = useCallback(async (searchTerm: string) => {
     try {
-      const response = await axios.get('/api/LR/parties/search', {
+      setPartySearchLoading(true);
+      console.log('Searching parties for:', searchTerm);
+      const response = await axios.get('/api/Archive/LR/parties/search', {
         params: { search: searchTerm }
       });
       setParties(response.data);
     } catch (error) {
       console.error('Error fetching parties:', error);
+      // Don't update parties on error to keep existing data
+    } finally {
+      setPartySearchLoading(false);
     }
-  };
+  }, []);
 
   const handleColumnToggle = (columnId: string) => {
     setColumnOptions(prev => prev.map(col => 
@@ -357,7 +459,7 @@ const LorryReceipt = () => {
       console.log('Sending summary request with params:', params);
       console.log('Selected columns being sent:', selectedColumns);
 
-      const response = await axios.get('/api/LR/export/summary', {
+      const response = await axios.get('/api/Archive/LR/export/summary', {
         params,
         responseType: 'blob',
         headers: {
@@ -444,7 +546,7 @@ const LorryReceipt = () => {
       console.log(`Sending ${type} export request with params:`, params);
       console.log('Selected columns being sent:', selectedColumns);
 
-      const response = await axios.get(`/api/LR/export/${type}`, {
+      const response = await axios.get(`/api/Archive/LR/export/${type}`, {
         params,
         responseType: 'blob',
         headers: {
@@ -650,7 +752,7 @@ const LorryReceipt = () => {
                     placeholder="Search by party name"
                   />
                 )}
-                loading={loading}
+                loading={partySearchLoading}
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props;
                   return (
@@ -964,7 +1066,7 @@ const LorryReceipt = () => {
                       Weight
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {lrEntries.reduce((sum, entry) => sum + (entry.lrWeight || 0), 0).toFixed(2)}
+                      {footerTotals.totalWeight.toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -979,13 +1081,7 @@ const LorryReceipt = () => {
                       Avg Rate
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {(() => {
-                        const validEntries = lrEntries.filter(entry => entry.ratePerQtl && entry.ratePerQtl > 0);
-                        const avgRate = validEntries.length > 0 
-                          ? validEntries.reduce((sum, entry) => sum + (entry.ratePerQtl || 0), 0) / validEntries.length
-                          : 0;
-                        return avgRate.toFixed(2);
-                      })()}
+                      {footerTotals.avgRate.toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1000,7 +1096,7 @@ const LorryReceipt = () => {
                       LR Qty
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {lrEntries.reduce((sum, entry) => sum + (entry.lrQty || 0), 0).toFixed(2)}
+                      {footerTotals.totalLrQty.toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1015,7 +1111,7 @@ const LorryReceipt = () => {
                       LR Amount
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{lrEntries.reduce((sum, entry) => sum + (entry.lrAmount || 0), 0).toFixed(2)}
+                      ₹{footerTotals.totalLrAmount.toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1030,7 +1126,7 @@ const LorryReceipt = () => {
                       Freight
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{lrEntries.reduce((sum, entry) => sum + (entry.freight || 0), 0).toFixed(2)}
+                      ₹{footerTotals.totalFreight.toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1045,7 +1141,7 @@ const LorryReceipt = () => {
                       Total Qty
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {lrEntries.reduce((sum, entry) => sum + (entry.totalQty || 0), 0).toFixed(2)}
+                      {footerTotals.totalQty.toFixed(2)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1060,7 +1156,7 @@ const LorryReceipt = () => {
                       Trucks
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {lrEntries.filter(entry => entry.truckNo && entry.truckNo.trim()).length}
+                      {footerTotals.totalTrucks}
                     </Typography>
                   </Box>
                 </Grid>

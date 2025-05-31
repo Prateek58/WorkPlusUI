@@ -57,14 +57,18 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
   useEffect(() => {
     if (open) {
       loadWorkers();
-      if (attendanceDate) {
-        validateAttendanceDate();
-      }
       resetForm();
     } else {
       resetForm();
     }
-  }, [open, attendanceDate]);
+  }, [open]);
+
+  // Separate useEffect for validating attendance date
+  useEffect(() => {
+    if (attendanceDate) {
+      validateAttendanceDate();
+    }
+  }, [attendanceDate]);
 
   const loadWorkers = async () => {
     try {

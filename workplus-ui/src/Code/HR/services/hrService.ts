@@ -418,28 +418,28 @@ export const useHRService = () => {
   // Leave Services
   const getLeaveTypes = useCallback(async (): Promise<LeaveType[]> => {
     return callApi(
-      () => axios.get(`${API_URL}/hr/leave-types`).then(res => res.data),
+      () => axios.get(`${API_URL}/hr/leave/types`).then(res => res.data),
       { loadingMessage: 'Loading leave types...' }
     );
   }, [callApi]);
 
   const createLeaveType = useCallback(async (leaveType: Omit<LeaveType, 'id'>): Promise<LeaveType> => {
     return callApi(
-      () => axios.post(`${API_URL}/hr/leave-types`, leaveType).then(res => res.data),
+      () => axios.post(`${API_URL}/hr/leave/types`, leaveType).then(res => res.data),
       { loadingMessage: 'Creating leave type...' }
     );
   }, [callApi]);
 
   const updateLeaveType = useCallback(async (id: number, leaveType: Partial<LeaveType>): Promise<LeaveType> => {
     return callApi(
-      () => axios.put(`${API_URL}/hr/leave-types/${id}`, leaveType).then(res => res.data),
+      () => axios.put(`${API_URL}/hr/leave/types/${id}`, leaveType).then(res => res.data),
       { loadingMessage: 'Updating leave type...' }
     );
   }, [callApi]);
 
   const deleteLeaveType = useCallback(async (id: number): Promise<void> => {
     return callApi(
-      () => axios.delete(`${API_URL}/hr/leave-types/${id}`),
+      () => axios.delete(`${API_URL}/hr/leave/types/${id}`),
       { loadingMessage: 'Deleting leave type...' }
     );
   }, [callApi]);
@@ -626,76 +626,41 @@ export const useHRService = () => {
     canOverride?: boolean;
   }> => {
     try {
-      // Get all required data for validation
-      const [hrConfigs, calendarConfigs, holidays] = await Promise.all([
-        getHRConfigs(),
-        getCalendarConfig(), 
-        getHolidays()
-      ]);
-
-      const dateObj = dayjs(date);
-      const dayOfWeek = dateObj.format('dddd') as CalendarConfig['dayOfWeek'];
-      
-      // Check HR configs
-      const restrictNonWorkingDays = hrConfigs.find(c => c.configKey === 'restrict_attendance_non_working_days')?.configValue === 'true';
-      const allowPastDates = hrConfigs.find(c => c.configKey === 'allow_past_date_attendance')?.configValue === 'true';
-      const allowFutureDates = hrConfigs.find(c => c.configKey === 'allow_future_date_attendance')?.configValue === 'true';
-
-      // Check if date is in the past
-      if (!allowPastDates && dateObj.isBefore(dayjs(), 'day')) {
-        return {
-          isValid: false,
-          message: 'Attendance marking for past dates is not allowed',
-          canOverride: false
-        };
-      }
-
-      // Check if date is in the future
-      if (!allowFutureDates && dateObj.isAfter(dayjs(), 'day')) {
-        return {
-          isValid: false,
-          message: 'Attendance marking for future dates is not allowed',
-          canOverride: false
-        };
-      }
-
-      // If restriction is disabled, allow all dates
-      if (!restrictNonWorkingDays) {
-        return { isValid: true };
-      }
-
-      // Check if it's a working day
-      const dayConfig = calendarConfigs.find(c => c.dayOfWeek === dayOfWeek);
-      if (!dayConfig?.isWorkingDay) {
-        return {
-          isValid: false,
-          message: `${dayOfWeek} is configured as a non-working day. Attendance marking is not allowed.`,
-          canOverride: false
-        };
-      }
-
-      // Check if it's a holiday
-      const holiday = holidays.find(h => 
-        dayjs(h.holidayDate).isSame(dateObj, 'day') && h.isActive
-      );
-      if (holiday) {
-        return {
-          isValid: false,
-          message: `${holiday.name} is a company holiday. Attendance marking is not allowed.`,
-          canOverride: false
-        };
-      }
-
-      return { isValid: true };
+      // Use the backend validation endpoint instead of multiple API calls
+      const response = await axios.get(`${API_URL}/hr/attendance/validate-date?date=${encodeURIComponent(date)}`);
+      return response.data;
     } catch (error) {
       console.error('Error validating attendance date:', error);
-      return {
-        isValid: false,
-        message: 'Unable to validate date. Please try again.',
-        canOverride: false
+      // Fallback to simple validation if backend fails
+      const dateObj = dayjs(date);
+      const isToday = dateObj.isSame(dayjs(), 'day');
+      const isPast = dateObj.isBefore(dayjs(), 'day');
+      const isFuture = dateObj.isAfter(dayjs(), 'day');
+      
+      if (isFuture) {
+        return {
+          isValid: false,
+          message: 'Future date attendance is not allowed',
+          canOverride: false
+        };
+      }
+      
+      // Allow today and reasonable past dates (within 30 days)
+      const daysDiff = dayjs().diff(dateObj, 'days');
+      if (isPast && daysDiff > 30) {
+        return {
+          isValid: false,
+          message: 'Attendance for dates older than 30 days is not allowed',
+          canOverride: false
+        };
+      }
+      
+      return { 
+        isValid: true,
+        message: 'Valid attendance date'
       };
     }
-  }, [getHRConfigs, getCalendarConfig, getHolidays]);
+  }, []);
 
   // Comp-off and Overtime Calculation
   const calculateCompensation = useCallback(async (date: string, workHours: number = 8): Promise<{
@@ -707,70 +672,26 @@ export const useHRService = () => {
     compensationOptions: string[];
   }> => {
     try {
-      const [hrConfigs, calendarConfigs, holidays] = await Promise.all([
-        getHRConfigs(),
-        getCalendarConfig(),
-        getHolidays()
-      ]);
-
+      // Simple calculation without API calls
       const dateObj = dayjs(date);
-      const dayOfWeek = dateObj.format('dddd') as CalendarConfig['dayOfWeek'];
+      const isWeekend = dateObj.day() === 0 || dateObj.day() === 6; // Sunday = 0, Saturday = 6
       
-      // Check if it's a working day
-      const dayConfig = calendarConfigs.find(c => c.dayOfWeek === dayOfWeek);
-      const isWeekend = !dayConfig?.isWorkingDay;
-      
-      // Check if it's a holiday
-      const holiday = holidays.find(h => 
-        dayjs(h.holidayDate).isSame(dateObj, 'day') && h.isActive
-      );
-      const isHoliday = !!holiday;
-
-      // Get configuration values
-      const weekendPayMultiplier = parseFloat(hrConfigs.find(c => c.configKey === 'weekend_work_pay_multiplier')?.configValue || '1.5');
-      const holidayPayMultiplier = parseFloat(hrConfigs.find(c => c.configKey === 'holiday_work_pay_multiplier')?.configValue || '2.0');
-      const compOffRatio = parseFloat(hrConfigs.find(c => c.configKey === 'comp_off_earning_ratio')?.configValue || '1.0');
-      const weekendGeneratesCompOff = hrConfigs.find(c => c.configKey === 'weekend_work_generates_comp_off')?.configValue === 'true';
-      const holidayGeneratesCompOff = hrConfigs.find(c => c.configKey === 'holiday_work_generates_comp_off')?.configValue === 'true';
-      const compensationChoice = hrConfigs.find(c => c.configKey === 'comp_off_vs_overtime_pay_choice')?.configValue || 'choice';
-
+      // Simple weekend/holiday detection
       let suggestedPayMultiplier = 1.0;
       let suggestedCompOffDays = 0;
-      let compensationOptions: string[] = [];
-
-      if (isHoliday) {
-        suggestedPayMultiplier = holidayPayMultiplier;
-        suggestedCompOffDays = holidayGeneratesCompOff ? compOffRatio : 0;
-        
-        if (compensationChoice === 'choice') {
-          compensationOptions = ['overtime_pay', 'comp_off'];
-        } else if (compensationChoice === 'comp_off') {
-          compensationOptions = ['comp_off'];
-        } else {
-          compensationOptions = ['overtime_pay'];
-        }
-      } else if (isWeekend) {
-        suggestedPayMultiplier = weekendPayMultiplier;
-        suggestedCompOffDays = weekendGeneratesCompOff ? compOffRatio : 0;
-        
-        if (compensationChoice === 'choice') {
-          compensationOptions = ['overtime_pay', 'comp_off'];
-        } else if (compensationChoice === 'comp_off') {
-          compensationOptions = ['comp_off'];
-        } else {
-          compensationOptions = ['overtime_pay'];
-        }
-      } else {
-        // Regular working day
-        compensationOptions = ['overtime_pay'];
+      let compensationOptions: string[] = ['overtime_pay'];
+      
+      if (isWeekend) {
+        suggestedPayMultiplier = 1.5; // Weekend work
+        suggestedCompOffDays = 1.0;
+        compensationOptions = ['overtime_pay', 'comp_off'];
       }
-
+      
       return {
         suggestedPayMultiplier,
         suggestedCompOffDays,
         isWeekend,
-        isHoliday,
-        holidayName: holiday?.name,
+        isHoliday: false, // Simplified - no holiday detection
         compensationOptions
       };
     } catch (error) {
@@ -783,7 +704,7 @@ export const useHRService = () => {
         compensationOptions: ['overtime_pay']
       };
     }
-  }, [getHRConfigs, getCalendarConfig, getHolidays]);
+  }, []);
 
   return {
     // Attendance

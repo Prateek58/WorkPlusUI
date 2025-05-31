@@ -42,7 +42,7 @@ const lrService = {
       startDate: filter.startDate?.format('YYYY-MM-DD'),
       endDate: filter.endDate?.format('YYYY-MM-DD'),
     };
-    const response = await axios.get('/api/LR/list', { params });
+    const response = await axios.get('/api/Archive/LR/list', { params });
     return response.data;
   },
 
@@ -52,7 +52,7 @@ const lrService = {
       startDate: filter.startDate?.format('YYYY-MM-DD'),
       endDate: filter.endDate?.format('YYYY-MM-DD'),
     };
-    const response = await axios.get('/api/LR/summary', { params });
+    const response = await axios.get('/api/Archive/LR/summary', { params });
     return response.data;
   }
 };
