@@ -144,6 +144,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { text: 'Attendance', icon: <CalendarTodayIcon />, path: '/hr/attendance' },
         { text: 'Leave Management', icon: <CalendarTodayIcon />, path: '/hr/leave' },
         { text: 'HR Masters', icon: <SettingsIcon />, path: '/hr/masters' },
+        { text: 'Reports', icon: <DescriptionIcon />, path: '/hr/reports' },
       ]
     },
     { 

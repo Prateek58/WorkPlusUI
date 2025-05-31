@@ -33,6 +33,10 @@ import jobEntryReportService, {
 // Import the JobEntryDashboard component
 import JobEntryDashboard from '../../MainWorkPlus/components/reports/dashboard-job-entry/JobEntryDashboard';
 
+// Import HR Dashboard components
+import AttendanceDashboard from '../../HR/components/dashboards/AttendanceDashboard';
+import LMSDashboard from '../../HR/components/dashboards/LMSDashboard';
+
 const Dashboard = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -242,27 +246,6 @@ const Dashboard = () => {
       </DashboardLayout>
     );
   }
-
-  // Coming Soon Dashboard Component
-  const ComingSoonDashboard = ({ title, description }: { title: string; description: string }) => (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '60vh',
-      textAlign: 'center' 
-    }}>
-      <CalendarTodayIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 2 }} />
-      <Typography variant="h4" gutterBottom color="primary">
-        {title}
-      </Typography>
-      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-        {description}
-      </Typography>
-      <Chip label="Coming Soon" color="warning" variant="outlined" />
-    </Box>
-  );
 
   // Default dashboard render function
   const renderDefaultDashboard = () => (
@@ -548,39 +531,13 @@ const Dashboard = () => {
               <AssignmentIcon sx={{ fontSize: '1rem' }} />
               <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Work</Typography>
             </ToggleButton>
-            <ToggleButton value="lms" aria-label="lms dashboard" sx={{ position: 'relative' }}>
+            <ToggleButton value="lms" aria-label="lms dashboard">
               <CalendarTodayIcon sx={{ fontSize: '1rem' }} />
               <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>LMS</Typography>
-              <Chip 
-                label="Soon" 
-                size="small" 
-                color="warning" 
-                sx={{ 
-                  position: 'absolute',
-                  top: -6,
-                  right: -6,
-                  height: 14, 
-                  fontSize: '0.55rem',
-                  '& .MuiChip-label': { px: 0.5, py: 0 }
-                }} 
-              />
             </ToggleButton>
-            <ToggleButton value="attendance" aria-label="attendance dashboard" sx={{ position: 'relative' }}>
+            <ToggleButton value="attendance" aria-label="attendance dashboard">
               <PeopleIcon sx={{ fontSize: '1rem' }} />
               <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>Attend</Typography>
-              <Chip 
-                label="Soon" 
-                size="small" 
-                color="warning" 
-                sx={{ 
-                  position: 'absolute',
-                  top: -6,
-                  right: -6,
-                  height: 14, 
-                  fontSize: '0.55rem',
-                  '& .MuiChip-label': { px: 0.5, py: 0 }
-                }} 
-              />
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
@@ -608,49 +565,9 @@ const Dashboard = () => {
       
       {dashboardType === 'work-entries' && <JobEntryDashboard embedded={true} />}
       
-      {dashboardType === 'lms' && (
-        <>
-          {/* Action buttons for LMS dashboard - commented out for now, can be re-enabled later
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3, gap: 1 }}>
-            <IconButton disabled>
-              <RefreshIcon />
-            </IconButton>
-            <IconButton disabled>
-              <FilterListIcon />
-            </IconButton>
-            <IconButton disabled>
-              <GetAppIcon />
-            </IconButton>
-          </Box>
-          */}
-          <ComingSoonDashboard 
-            title="Leave Management System"
-            description="Comprehensive leave request and approval management dashboard"
-          />
-        </>
-      )}
+      {dashboardType === 'lms' && <LMSDashboard embedded={true} />}
       
-      {dashboardType === 'attendance' && (
-        <>
-          {/* Action buttons for Attendance dashboard - commented out for now, can be re-enabled later
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3, gap: 1 }}>
-            <IconButton disabled>
-              <RefreshIcon />
-            </IconButton>
-            <IconButton disabled>
-              <FilterListIcon />
-            </IconButton>
-            <IconButton disabled>
-              <GetAppIcon />
-            </IconButton>
-          </Box>
-          */}
-          <ComingSoonDashboard 
-            title="Attendance Dashboard"
-            description="Real-time attendance tracking and analytics"
-          />
-        </>
-      )}
+      {dashboardType === 'attendance' && <AttendanceDashboard embedded={true} />}
     </DashboardLayout>
   );
 };

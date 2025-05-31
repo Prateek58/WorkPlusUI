@@ -25,6 +25,9 @@ import WorkPlusReportsLanding from './Code/MainWorkPlus/pages/WorkPlusReportsLan
 import JobEntryDashboard from './Code/MainWorkPlus/components/reports/dashboard-job-entry/JobEntryDashboard';
 import { HRLanding, AttendancePage, LeavePage } from './Code/HR';
 import HRMastersLanding from './Code/HR/pages/HRMastersLanding';
+import HRReportsLanding from './Code/HR/pages/HRReportsLanding';
+import HRAttendanceDashboard from './Code/HR/pages/HRAttendanceDashboard';
+import HRLMSDashboard from './Code/HR/pages/HRLMSDashboard';
 
 const App: React.FC = () => {
   return (
@@ -56,6 +59,9 @@ const App: React.FC = () => {
                     <Route path="hr/attendance" element={<AttendancePage />} />
                     <Route path="hr/leave" element={<LeavePage />} />
                     <Route path="hr/masters" element={<HRMastersLanding />} />
+                    <Route path="hr/reports" element={<HRReportsLanding />} />
+                    <Route path="hr/reports/dashboard/attendance" element={<HRAttendanceDashboard />} />
+                    <Route path="hr/reports/dashboard/lms" element={<HRLMSDashboard />} />
                   </Route>
                 </Routes>
               </Router>

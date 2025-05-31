@@ -10,6 +10,9 @@ import PieChartIcon from '@mui/icons-material/PieChart';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import JobEntriesReportDialog from '../components/reports/job-entries/JobEntriesReportDialog';
+import WorkerPerformanceReportDialog from '../components/reports/dialogs/WorkerPerformanceReportDialog';
+import JobCompletionReportDialog from '../components/reports/dialogs/JobCompletionReportDialog';
+import EarningsReportDialog from '../components/reports/dialogs/EarningsReportDialog';
 
 const reportTypes = [
   {
@@ -60,6 +63,9 @@ const WorkPlusReportsLanding: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [jobEntriesDialogOpen, setJobEntriesDialogOpen] = useState(false);
+  const [workerPerformanceDialogOpen, setWorkerPerformanceDialogOpen] = useState(false);
+  const [jobCompletionDialogOpen, setJobCompletionDialogOpen] = useState(false);
+  const [earningsDialogOpen, setEarningsDialogOpen] = useState(false);
 
   const handleReportCardClick = (action: string) => {
     switch (action) {
@@ -69,7 +75,15 @@ const WorkPlusReportsLanding: React.FC = () => {
       case 'overview':
         navigate('/workplus/reports/dashboard/job-entry');
         break;
-      // Add more cases for other report types in the future
+      case 'worker-performance':
+        setWorkerPerformanceDialogOpen(true);
+        break;
+      case 'job-completion':
+        setJobCompletionDialogOpen(true);
+        break;
+      case 'earnings':
+        setEarningsDialogOpen(true);
+        break;
       default:
         // Do nothing for now or show a "coming soon" message
         break;
@@ -154,6 +168,18 @@ const WorkPlusReportsLanding: React.FC = () => {
       <JobEntriesReportDialog 
         open={jobEntriesDialogOpen}
         onClose={() => setJobEntriesDialogOpen(false)}
+      />
+      <WorkerPerformanceReportDialog 
+        open={workerPerformanceDialogOpen}
+        onClose={() => setWorkerPerformanceDialogOpen(false)}
+      />
+      <JobCompletionReportDialog 
+        open={jobCompletionDialogOpen}
+        onClose={() => setJobCompletionDialogOpen(false)}
+      />
+      <EarningsReportDialog 
+        open={earningsDialogOpen}
+        onClose={() => setEarningsDialogOpen(false)}
       />
     </DashboardLayout>
   );
