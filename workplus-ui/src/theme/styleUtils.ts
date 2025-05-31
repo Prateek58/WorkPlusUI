@@ -91,7 +91,11 @@ export const formContainerStyles = (theme: Theme): SxProps => ({
 });
 
 // Table cell styles
- 
+export const tableCellHeaderStyles = (theme: Theme): SxProps => ({
+  fontWeight: 600,
+  backgroundColor: theme.palette.grey[50],
+  color: theme.palette.text.primary,
+});
 
 // Common input field height
 export const inputHeight = '45px';

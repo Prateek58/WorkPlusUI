@@ -76,7 +76,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [open, setOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openSubMenu, setOpenSubMenu] = useState<string[]>(['legacy-reports', 'workplus']);
+  const [openSubMenu, setOpenSubMenu] = useState<string[]>(['legacy-reports', 'workplus', 'hr']);
   const theme = useTheme();
   const { toggleColorMode, mode } = useThemeContext();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -126,15 +126,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const menuItems = [
     { text: 'Dashboards', icon: <DashboardIcon />, count: 5, path: '/dashboard' },
     { 
-      text: 'Legacy Reports', 
-      icon: <DescriptionIcon />,
-      id: 'legacy-reports',
-      subItems: [
-        { text: 'Lorry Receipt', icon: <TruckIcon />, path: '/lorry-receipt' },
-        { text: 'Job Works', icon: <JobWorkIcon />, path: '/job-work' },
-      ]
-    },
-    { 
       text: 'WorkPlus', 
       icon: <AnalyticsIcon />,
       id: 'workplus',
@@ -146,16 +137,23 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       ]
     },
     { 
-      text: 'Leave Management', 
-      icon: <CalendarTodayIcon />, 
-      path: '/lms',
-      comingSoon: true
+      text: 'HR Management', 
+      icon: <PeopleIcon />,
+      id: 'hr',
+      subItems: [
+        { text: 'Attendance', icon: <CalendarTodayIcon />, path: '/hr/attendance' },
+        { text: 'Leave Management', icon: <CalendarTodayIcon />, path: '/hr/leave' },
+        { text: 'HR Masters', icon: <SettingsIcon />, path: '/hr/masters' },
+      ]
     },
     { 
-      text: 'Attendance', 
-      icon: <PeopleIcon />, 
-      path: '/attendance',
-      comingSoon: true
+      text: 'Legacy Reports', 
+      icon: <DescriptionIcon />,
+      id: 'legacy-reports',
+      subItems: [
+        { text: 'Lorry Receipt', icon: <TruckIcon />, path: '/lorry-receipt' },
+        { text: 'Job Works', icon: <JobWorkIcon />, path: '/job-work' },
+      ]
     },
   ];
 
@@ -250,18 +248,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   {item.count}
                 </Box>
               )}
-              {item.comingSoon && open && (
-                <Chip 
-                  label="Soon" 
-                  size="small" 
-                  color="warning"
-                  sx={{ 
-                    height: 20, 
-                    fontSize: '0.6rem',
-                    '& .MuiChip-label': { px: 0.5, py: 0 }
-                  }}
-                />
-              )}
+
               {item.subItems && open && (
                 <IconButton
                   size="small" 
@@ -288,9 +275,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                       key={subItem.text}
                       onClick={() => handleNavigate(subItem.path)}
                       sx={{
-                        pl: 6,
+                        pl: 5.5,
+                        pr: 2,
+                        py: 0.5,
                         borderRadius: 2,
-                        mb: 1,
+                        mb: 0.5,
                         cursor: 'pointer',
                         backgroundColor: isActive(subItem.path) ? 'primary.main' : 'transparent',
                         '&:hover': {
@@ -299,14 +288,45 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                             color: 'white',
                           },
                         },
-                        '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-                          color: isActive(subItem.path) ? 'white' : 'inherit',
+                        '& .MuiListItemIcon-root': {
+                          color: isActive(subItem.path) 
+                            ? 'white' 
+                            : theme.palette.mode === 'dark' 
+                              ? 'rgba(255, 255, 255, 0.7)' 
+                              : 'rgba(0, 0, 0, 0.6)',
+                          minWidth: 32,
+                        },
+                        '& .MuiListItemText-primary': {
+                          color: isActive(subItem.path) 
+                            ? 'white' 
+                            : theme.palette.mode === 'dark' 
+                              ? 'rgba(255, 255, 255, 0.8)' 
+                              : 'rgba(0, 0, 0, 0.7)',
+                          fontSize: '0.8rem',
+                          fontWeight: 400,
                         },
                       }}
                     >
-                      <ListItemIcon sx={{ minWidth: 40 }}>{subItem.icon}</ListItemIcon>
+                      <ListItemIcon 
+                        sx={{ 
+                          minWidth: 32,
+                          '& .MuiSvgIcon-root': {
+                            fontSize: '1rem',
+                          }
+                        }}
+                      >
+                        {subItem.icon}
+                      </ListItemIcon>
                       <ListItemText
                         primary={subItem.text}
+                        primaryTypographyProps={{
+                          variant: 'caption',
+                          sx: {
+                            fontSize: '0.8rem',
+                            fontWeight: 400,
+                            lineHeight: 1.2,
+                          }
+                        }}
                         sx={{
                           opacity: open ? 1 : 0,
                           transition: 'opacity 0.2s',

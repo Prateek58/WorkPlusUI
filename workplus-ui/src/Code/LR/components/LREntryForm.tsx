@@ -15,9 +15,10 @@ import {
   Tabs,
   Tab,
   Divider,
+  IconButton,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { Save as SaveIcon, Cancel as CancelIcon, Add as AddIcon } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import { useLRService } from '../services/lrService';
 import type { LREntry, Unit, Party, Transporter, City, CreateLREntry, UpdateLREntry } from '../services/lrService';
@@ -173,6 +174,10 @@ const LREntryForm: React.FC<LREntryFormProps> = ({ entry, onSuccess, onCancel })
     }
   };
 
+  const handleAddCityClick = () => {
+    setCityDialogOpen(true);
+  };
+
   const handleCityCreated = (newCity: City) => {
     setCities(prev => [...prev, newCity]);
     setCityDialogOpen(false);
@@ -272,26 +277,46 @@ const LREntryForm: React.FC<LREntryFormProps> = ({ entry, onSuccess, onCancel })
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Autocomplete
-                options={cities}
-                getOptionLabel={(option) => `${option.cityName}, ${option.state}`}
-                value={cities.find(c => c.cityId === formData.originCityId) || null}
-                onChange={(_, value) => handleInputChange('originCityId', value?.cityId)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Origin City" />
-                )}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Autocomplete
+                  options={cities}
+                  getOptionLabel={(option) => `${option.cityName}, ${option.state}`}
+                  value={cities.find(c => c.cityId === formData.originCityId) || null}
+                  onChange={(_, value) => handleInputChange('originCityId', value?.cityId)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Origin City" />
+                  )}
+                  sx={{ flexGrow: 1 }}
+                />
+                <IconButton
+                  onClick={handleAddCityClick}
+                  color="primary"
+                  title="Add New City"
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Autocomplete
-                options={cities}
-                getOptionLabel={(option) => `${option.cityName}, ${option.state}`}
-                value={cities.find(c => c.cityId === formData.destinationCityId) || null}
-                onChange={(_, value) => handleInputChange('destinationCityId', value?.cityId)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Destination City" />
-                )}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Autocomplete
+                  options={cities}
+                  getOptionLabel={(option) => `${option.cityName}, ${option.state}`}
+                  value={cities.find(c => c.cityId === formData.destinationCityId) || null}
+                  onChange={(_, value) => handleInputChange('destinationCityId', value?.cityId)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Destination City" />
+                  )}
+                  sx={{ flexGrow: 1 }}
+                />
+                <IconButton
+                  onClick={handleAddCityClick}
+                  color="primary"
+                  title="Add New City"
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>

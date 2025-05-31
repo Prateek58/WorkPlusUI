@@ -439,31 +439,70 @@ const Dashboard = () => {
         {/* Quick Action Links */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mr: 2 }}>
           <Chip
-            icon={<WorkIcon />}
+            icon={<WorkIcon sx={{ fontSize: '1rem' }} />}
             label="Work Entry"
             color="primary"
             variant="outlined"
             clickable
             onClick={() => navigate('/work-entry')}
-            sx={{ fontWeight: 500 }}
+            size="small"
+            sx={{ 
+              fontWeight: 400,
+              fontSize: '0.8rem',
+              height: '28px',
+              '& .MuiChip-label': {
+                px: 1.5,
+                fontSize: '0.8rem',
+              },
+              '& .MuiChip-icon': {
+                fontSize: '1rem',
+                ml: 0.5,
+              }
+            }}
           />
           <Chip
-            icon={<SettingsIcon />}
+            icon={<SettingsIcon sx={{ fontSize: '1rem' }} />}
             label="Masters"
             color="primary"
             variant="outlined"
             clickable
             onClick={() => navigate('/masters')}
-            sx={{ fontWeight: 500 }}
+            size="small"
+            sx={{ 
+              fontWeight: 400,
+              fontSize: '0.8rem',
+              height: '28px',
+              '& .MuiChip-label': {
+                px: 1.5,
+                fontSize: '0.8rem',
+              },
+              '& .MuiChip-icon': {
+                fontSize: '1rem',
+                ml: 0.5,
+              }
+            }}
           />
           <Chip
-            icon={<ArticleIcon />}
+            icon={<ArticleIcon sx={{ fontSize: '1rem' }} />}
             label="Reports"
             color="primary"
             variant="outlined"
             clickable
             onClick={() => navigate('/reports')}
-            sx={{ fontWeight: 500 }}
+            size="small"
+            sx={{ 
+              fontWeight: 400,
+              fontSize: '0.8rem',
+              height: '28px',
+              '& .MuiChip-label': {
+                px: 1.5,
+                fontSize: '0.8rem',
+              },
+              '& .MuiChip-icon': {
+                fontSize: '1rem',
+                ml: 0.5,
+              }
+            }}
           />
         </Box>
 

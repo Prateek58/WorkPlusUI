@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
+import { useThemeContext } from '../../../theme/ThemeProvider';
 
 interface LoaderProps {
   open: boolean;
@@ -11,6 +12,8 @@ const Loader: React.FC<LoaderProps> = ({ open, message = 'Loading...' }) => {
   const [displayText, setDisplayText] = useState('');
   const textToType = 'CHOYAL';
   const typingSpeed = 100;
+  const theme = useTheme();
+  const { mode } = useThemeContext();
 
   useEffect(() => {
     if (open) {
@@ -39,6 +42,23 @@ const Loader: React.FC<LoaderProps> = ({ open, message = 'Loading...' }) => {
 
   if (!showLoader) return null;
 
+  // Theme-aware colors
+  const backgroundColor = mode === 'dark' 
+    ? theme.palette.background.paper 
+    : theme.palette.background.default;
+  
+  const primaryTextColor = mode === 'dark' 
+    ? theme.palette.primary.main 
+    : '#ff0000';
+  
+  const secondaryTextColor = mode === 'dark' 
+    ? theme.palette.text.primary 
+    : theme.palette.text.primary;
+  
+  const boxShadow = mode === 'dark'
+    ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+    : '0 4px 20px rgba(0, 0, 0, 0.15)';
+
   return (
     <Box
       sx={{
@@ -52,17 +72,18 @@ const Loader: React.FC<LoaderProps> = ({ open, message = 'Loading...' }) => {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        backgroundColor: 'white',
+        backgroundColor,
         borderRadius: '8px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+        boxShadow,
         minWidth: '200px',
-        minHeight: '100px'
+        minHeight: '100px',
+        border: mode === 'dark' ? `1px solid ${theme.palette.divider}` : 'none',
       }}
     >
       <Typography
         variant="h4"
         sx={{
-          color: '#ff0000',
+          color: primaryTextColor,
           fontWeight: 'bold',
           fontFamily: 'monospace',
           letterSpacing: '2px',
@@ -79,7 +100,7 @@ const Loader: React.FC<LoaderProps> = ({ open, message = 'Loading...' }) => {
             transform: 'translateY(-50%)',
             width: '2px',
             height: '1.2em',
-            backgroundColor: '#ff0000',
+            backgroundColor: primaryTextColor,
             animation: 'blink 1s step-end infinite',
           },
           '@keyframes blink': {
@@ -94,7 +115,7 @@ const Loader: React.FC<LoaderProps> = ({ open, message = 'Loading...' }) => {
         variant="body2"
         sx={{
           mt: 1,
-          color: 'black',
+          color: secondaryTextColor,
           fontSize: '0.875rem',
           fontWeight: 500,
           textTransform: 'uppercase',
@@ -108,7 +129,7 @@ const Loader: React.FC<LoaderProps> = ({ open, message = 'Loading...' }) => {
           variant="body2"
           sx={{
             mt: 2,
-            color: 'text.secondary',
+            color: theme.palette.text.secondary,
             textAlign: 'center'
           }}
         >
