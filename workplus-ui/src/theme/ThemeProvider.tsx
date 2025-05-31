@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Components } from '@mui/material/styles';
+import userSettingsService, { ThemeColors, UserSettingsState, DEFAULT_THEME_COLORS } from '../Code/Common/services/userSettingsService';
 
 declare module '@mui/material/styles' {
   interface Components {
@@ -28,11 +29,23 @@ declare module '@mui/material/styles' {
 type ThemeContextType = {
   mode: 'light' | 'dark';
   toggleColorMode: () => void;
+  themeColors: ThemeColors;
+  useCustomColors: boolean;
+  updateThemeColors: (colors: ThemeColors) => Promise<void>;
+  setUseCustomColors: (use: boolean) => Promise<void>;
+  resetToDefaults: () => Promise<void>;
+  isLoading: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextType>({
   mode: 'dark',
   toggleColorMode: () => {},
+  themeColors: DEFAULT_THEME_COLORS,
+  useCustomColors: false,
+  updateThemeColors: async () => {},
+  setUseCustomColors: async () => {},
+  resetToDefaults: async () => {},
+  isLoading: true,
 });
 
 export const useThemeContext = () => {
@@ -45,48 +58,134 @@ export const useThemeContext = () => {
 
 export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setMode] = useState<'light' | 'dark'>('dark');
+  const [themeColors, setThemeColors] = useState<ThemeColors>(DEFAULT_THEME_COLORS);
+  const [useCustomColors, setUseCustomColorsState] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Load user settings on mount
+  useEffect(() => {
+    const loadUserSettings = async () => {
+      try {
+        const settings = await userSettingsService.getCompleteThemeSettings();
+        setMode(settings.themeMode);
+        setUseCustomColorsState(settings.useCustomColors || false);
+        
+        if (settings.themeColors) {
+          setThemeColors(settings.themeColors);
+        }
+      } catch (error) {
+        console.error('Error loading user theme settings:', error);
+        // Use defaults if loading fails
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Only load settings if user is authenticated
+    const token = localStorage.getItem('token');
+    if (token) {
+      loadUserSettings();
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const toggleColorMode = async () => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
+    setMode(newMode);
+    
+    // Save to user settings
+    try {
+      await userSettingsService.setThemeMode(newMode);
+    } catch (error) {
+      console.error('Error saving theme mode:', error);
+    }
+  };
+
+  const updateThemeColors = async (colors: ThemeColors) => {
+    setThemeColors(colors);
+    try {
+      await userSettingsService.setThemeColors(colors);
+    } catch (error) {
+      console.error('Error saving theme colors:', error);
+    }
+  };
+
+  const setUseCustomColors = async (use: boolean) => {
+    setUseCustomColorsState(use);
+    try {
+      const settings: UserSettingsState = {
+        themeMode: mode,
+        themeColors: use ? themeColors : undefined,
+        useCustomColors: use
+      };
+      await userSettingsService.saveCompleteThemeSettings(settings);
+    } catch (error) {
+      console.error('Error saving custom colors setting:', error);
+    }
+  };
+
+  const resetToDefaults = async () => {
+    setMode('light');
+    setThemeColors(DEFAULT_THEME_COLORS);
+    setUseCustomColorsState(false);
+    try {
+      await userSettingsService.resetThemeToDefaults();
+    } catch (error) {
+      console.error('Error resetting theme to defaults:', error);
+    }
+  };
 
   const colorMode = useMemo(
     () => ({
       mode,
-      toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
-      },
+      toggleColorMode,
+      themeColors,
+      useCustomColors,
+      updateThemeColors,
+      setUseCustomColors,
+      resetToDefaults,
+      isLoading,
     }),
-    [mode]
+    [mode, themeColors, useCustomColors, isLoading]
   );
+
+  // Determine which colors to use
+  const activeColors = useCustomColors ? themeColors : DEFAULT_THEME_COLORS;
+  const currentModeColors = activeColors[mode];
 
   const theme = useMemo(
     () =>
       createTheme({
         palette: {
           mode,
-          ...(mode === 'dark'
-            ? {
-                primary: {
-                  main: '#E6AF2F',
-                },
-                secondary: {
-                  main: '#f48fb1',
-                },
-                background: {
-                  default: '#0a1929',
-                  paper: '#171b35',
-                },
-              }
-            : {
-                primary: {
-                  //main: '#261c68',
-                  main: '#ba8b34',
-                },
-                secondary: {
-                  main: '#dc004e',
-                },
-                background: {
-                  default: '#FFFFFF',
-                  paper: '#F4F4F1',
-                },
-              }),
+          primary: {
+            main: currentModeColors.primary,
+          },
+          secondary: {
+            main: currentModeColors.secondary,
+          },
+          background: {
+            default: currentModeColors.background,
+            paper: currentModeColors.surface,
+          },
+          text: {
+            primary: currentModeColors.text,
+            secondary: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+          },
+          // Auto-derive accent/warning colors
+          warning: {
+            main: currentModeColors.accent,
+          },
+          error: {
+            main: mode === 'dark' ? '#f44336' : '#d32f2f',
+          },
+          info: {
+            main: mode === 'dark' ? '#29b6f6' : '#1976d2',
+          },
+          success: {
+            main: mode === 'dark' ? '#66bb6a' : '#2e7d32',
+          },
         },
         typography: {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -115,6 +214,8 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           },
         },
         components: {
+          // NOTE: Loader styling is preserved by keeping it in a separate CSS file
+          // The loader uses hardcoded colors and is not affected by theme changes
           MuiButton: {
             styleOverrides: {
               root: {
@@ -202,7 +303,6 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiCard: {
             styleOverrides: {
               root: {
-                
                 padding: '1rem',
                 boxShadow: mode === 'light' 
                   ? '0px 2px 8px rgba(0, 0, 0, 0.05)'
@@ -251,7 +351,6 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiMenu: {
             styleOverrides: {
               paper: {
-               
                 boxShadow: mode === 'light'
                   ? '0px 2px 8px rgba(0, 0, 0, 0.1)'
                   : '0px 2px 8px rgba(0, 0, 0, 0.25)',
@@ -344,7 +443,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         },
         spacing: 4,
       }),
-    [mode]
+    [mode, currentModeColors.primary, currentModeColors.secondary, currentModeColors.accent, currentModeColors.background, currentModeColors.surface, currentModeColors.text]
   );
 
   return (
