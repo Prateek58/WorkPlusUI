@@ -83,7 +83,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     const resetToDefaultsState = () => {
-      setMode('light');
+      setMode('dark');
       setThemeColors(DEFAULT_THEME_COLORS);
       setUseCustomColorsState(false);
     };
@@ -141,7 +141,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } else {
           // User logged out - reset to defaults
           console.log('User logged out - resetting to default theme');
-          setMode('light');
+          setMode('dark');
           setThemeColors(DEFAULT_THEME_COLORS);
           setUseCustomColorsState(false);
         }
@@ -200,7 +200,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const resetToDefaults = async () => {
-    setMode('light');
+    setMode('dark');
     setThemeColors(DEFAULT_THEME_COLORS);
     setUseCustomColorsState(false);
     try {
@@ -259,6 +259,9 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           },
           success: {
             main: mode === 'dark' ? '#66bb6a' : '#2e7d32',
+          },
+          appBar: {
+            main: currentModeColors.background,
           },
         },
         typography: {
@@ -377,7 +380,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiCard: {
             styleOverrides: {
               root: {
-                padding: '1rem',
+                backgroundColor: currentModeColors.surface,
                 boxShadow: mode === 'light' 
                   ? '0px 2px 8px rgba(0, 0, 0, 0.05)'
                   : '0px 2px 8px rgba(0, 0, 0, 0.25)',
@@ -387,7 +390,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiDrawer: {
             styleOverrides: {
               paper: {
-                width: 240,
+                backgroundColor: currentModeColors.surface,
                 borderRight: 'none',
               },
             },
@@ -395,8 +398,9 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
           MuiAppBar: {
             styleOverrides: {
               root: {
-                height: 56,
+                backgroundColor: 'transparent',
                 boxShadow: 'none',
+                borderBottom: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
               },
             },
           },
@@ -470,16 +474,31 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 padding: 0,
                 width: '100%',
                 height: '100%',
+                backgroundColor: currentModeColors.background,
               },
               body: {
                 margin: 0,
                 padding: 0,
                 width: '100%',
                 height: '100%',
+                backgroundColor: currentModeColors.background,
+                minHeight: '100vh',
+                '& #root': {
+                  minHeight: '100vh',
+                  backgroundColor: currentModeColors.background,
+                },
               },
               '#root': {
                 width: '100%',
                 height: '100%',
+                minHeight: '100vh',
+                backgroundColor: currentModeColors.background,
+                display: 'flex',
+                flexDirection: 'column',
+              },
+              '.MuiDialog-paper': {
+                backgroundColor: `${currentModeColors.surface} !important`,
+                backgroundImage: 'none !important',
               },
               'input': {
                 '&[type=number]': {
@@ -517,7 +536,7 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         },
         spacing: 4,
       }),
-    [mode, currentModeColors.primary, currentModeColors.secondary, currentModeColors.accent, currentModeColors.background, currentModeColors.surface, currentModeColors.text]
+    [mode, currentModeColors]
   );
 
   return (

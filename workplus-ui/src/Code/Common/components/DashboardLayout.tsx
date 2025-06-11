@@ -370,6 +370,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     <Box sx={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
       <AppBar
         position="fixed"
+        color="inherit"
+        elevation={0}
         sx={{
           width: { sm: `calc(100% - ${open ? drawerWidth : collapsedWidth}px)` },
           ml: { sm: `${open ? drawerWidth : collapsedWidth}px` },
@@ -377,11 +379,28 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-          bgcolor: 'primary.main',
-          boxShadow: 1,
+          bgcolor: 'background.default',
+          border: 'none',
+          '&::before': {
+            display: 'none'
+          },
+          '&::after': {
+            display: 'none'
+          }
         }}
       >
-        <Toolbar>
+        <Toolbar 
+          sx={{ 
+            bgcolor: 'background.default',
+            border: 'none',
+            '&::before': {
+              display: 'none'
+            },
+            '&::after': {
+              display: 'none'
+            }
+          }}
+        >
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -440,6 +459,67 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </Stack>
         </Toolbar>
       </AppBar>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleProfileMenuClose}
+        onClick={handleProfileMenuClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+            mt: 1.5,
+            '& .MuiAvatar-root': {
+              width: 32,
+              height: 32,
+              ml: -0.5,
+              mr: 1,
+            },
+            '&:before': {
+              content: '""',
+              display: 'block',
+              position: 'absolute',
+              top: 0,
+              right: 14,
+              width: 10,
+              height: 10,
+              bgcolor: 'background.paper',
+              transform: 'translateY(-50%) rotate(45deg)',
+              zIndex: 0,
+            },
+          },
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <MenuItem onClick={() => handleNavigate('/profile')}>
+          <ListItemIcon>
+            <PersonIcon fontSize="small" />
+          </ListItemIcon>
+          Profile
+        </MenuItem>
+        <MenuItem onClick={() => handleNavigate('/settings')}>
+          <ListItemIcon>
+            <SettingsIcon fontSize="small" />
+          </ListItemIcon>
+          Settings
+        </MenuItem>
+        <MenuItem onClick={() => handleNavigate('/help')}>
+          <ListItemIcon>
+            <HelpIcon fontSize="small" />
+          </ListItemIcon>
+          Help
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
+      </Menu>
 
       <Box 
         component="nav" 

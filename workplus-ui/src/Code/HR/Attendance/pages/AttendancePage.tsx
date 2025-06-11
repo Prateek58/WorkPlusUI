@@ -196,50 +196,50 @@ const AttendancePage: React.FC = () => {
       </Box>
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={6} sm={6} md={3}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography color="textSecondary" gutterBottom noWrap>
                 Present {getDateLabel()}
               </Typography>
-              <Typography variant="h4" color="success.main">
+              <Typography variant="h4" color="success.main" noWrap>
                 {presentCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <Grid item xs={6} sm={6} md={3}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography color="textSecondary" gutterBottom noWrap>
                 Absent {getDateLabel()}
               </Typography>
-              <Typography variant="h4" color="error.main">
+              <Typography variant="h4" color="error.main" noWrap>
                 {absentCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <Grid item xs={6} sm={6} md={3}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography color="textSecondary" gutterBottom noWrap>
                 Late {getDateLabel()}
               </Typography>
-              <Typography variant="h4" color="warning.main">
+              <Typography variant="h4" color="warning.main" noWrap>
                 {lateCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Typography color="textSecondary" gutterBottom>
+        <Grid item xs={6} sm={6} md={3}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <Typography color="textSecondary" gutterBottom noWrap>
                 Total Records {getDateLabel()}
               </Typography>
-              <Typography variant="h4">
+              <Typography variant="h4" noWrap>
                 {selectedDateRecords.length}
               </Typography>
             </CardContent>

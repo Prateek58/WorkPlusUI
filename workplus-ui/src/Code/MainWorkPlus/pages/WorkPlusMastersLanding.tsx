@@ -114,44 +114,41 @@ const WorkPlusMastersLanding: React.FC = () => {
           </Typography>
         </Box>
         <Grid container spacing={3}>
-          {masterItems.map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card 
-                sx={{ 
-                  height: '100%', 
-                  transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+          {masterItems.map((item) => (
+            <Grid item xs={6} sm={6} md={4} key={item.title}>
+              <Card
+                sx={{
+                  height: '100%',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
                     transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
-                  }
+                    boxShadow: `0 8px 25px ${theme.palette.primary.main}20`,
+                  },
                 }}
+                onClick={item.onClick}
               >
-                <CardActionArea 
-                  onClick={item.onClick}
-                  sx={{ height: '100%' }}
-                >
-                  <CardContent sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center',
-                    p: 3
-                  }}>
-                    <Box 
-                      sx={{ 
-                        p: 2, 
-                        borderRadius: '50%', 
-                        bgcolor: `${item.color}15`, 
-                        color: item.color,
-                        mb: 2
-                      }}
-                    >
-                      {item.icon}
-                    </Box>
-                    <Typography variant="h6" component="div" align="center">
-                      {item.title}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
+                <CardContent sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center',
+                  p: 3
+                }}>
+                  <Box 
+                    sx={{ 
+                      p: 2, 
+                      borderRadius: '50%', 
+                      bgcolor: `${item.color}15`, 
+                      color: item.color,
+                      mb: 2
+                    }}
+                  >
+                    {item.icon}
+                  </Box>
+                  <Typography variant="h6" component="div" align="center">
+                    {item.title}
+                  </Typography>
+                </CardContent>
               </Card>
             </Grid>
           ))}

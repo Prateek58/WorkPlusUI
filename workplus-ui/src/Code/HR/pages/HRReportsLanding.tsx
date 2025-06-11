@@ -143,7 +143,7 @@ const HRReportsLanding: React.FC = () => {
   );
 
   const renderReportCard = (report: typeof reportTypes[0]) => (
-    <Grid item xs={12} sm={6} md={4} key={report.action}>
+    <Grid item xs={6} sm={6} md={4} key={report.action}>
       <Card
         sx={{
           ...cardStyles(theme),
@@ -215,44 +215,44 @@ const HRReportsLanding: React.FC = () => {
         {/* Quick Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles(theme)}>
-              <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Card sx={{ ...cardStyles(theme), height: '100%' }}>
+              <Box sx={{ p: 2, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <EventAvailableIcon sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-                <Typography variant="h6" color="success.main">Live</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="h6" color="success.main" noWrap>Live</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
                   Attendance Tracking
                 </Typography>
               </Box>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles(theme)}>
-              <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Card sx={{ ...cardStyles(theme), height: '100%' }}>
+              <Box sx={{ p: 2, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <BeachAccessIcon sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-                <Typography variant="h6" color="info.main">Active</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="h6" color="info.main" noWrap>Active</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
                   Leave Management
                 </Typography>
               </Box>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles(theme)}>
-              <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Card sx={{ ...cardStyles(theme), height: '100%' }}>
+              <Box sx={{ p: 2, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <GroupIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                <Typography variant="h6" color="primary.main">All</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="h6" color="primary.main" noWrap>All</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
                   Workers Covered
                 </Typography>
               </Box>
             </Card>
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={cardStyles(theme)}>
-              <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Card sx={{ ...cardStyles(theme), height: '100%' }}>
+              <Box sx={{ p: 2, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <AssessmentIcon sx={{ fontSize: 40, color: 'secondary.main', mb: 1 }} />
-                <Typography variant="h6" color="secondary.main">Real-time</Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="h6" color="secondary.main" noWrap>Real-time</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
                   Analytics & Reports
                 </Typography>
               </Box>

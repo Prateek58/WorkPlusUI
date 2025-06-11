@@ -22,6 +22,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import GetAppIcon from '@mui/icons-material/GetApp';
+import SchoolIcon from '@mui/icons-material/School';
 
 // Import job entry service for real data
 import jobEntryReportService, { 
@@ -414,13 +415,27 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       {/* Fixed Header for All Dashboards */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mt: 9, mb: 2, flexWrap: 'wrap' }}>
-        <Typography variant="h6" sx={{ ...sectionTitleStyles(theme), mr: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        alignItems: { xs: 'stretch', sm: 'center' },
+        mt: 9, 
+        mb: 2, 
+        gap: { xs: 2, sm: 0 },
+        flexWrap: { sm: 'wrap' }
+      }}>
+        <Typography variant="h6" sx={{ ...sectionTitleStyles(theme), mr: { sm: 2 } }}>
           {getDashboardTitle()}
         </Typography>
         
         {/* Quick Action Links */}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mr: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 1, 
+          flexWrap: 'wrap',
+          justifyContent: { xs: 'center', sm: 'flex-start' },
+          mr: { sm: 2 }
+        }}>
           <Chip
             icon={<WorkIcon sx={{ fontSize: '1rem' }} />}
             label="Work Entry"
@@ -489,8 +504,14 @@ const Dashboard = () => {
           />
         </Box>
 
-        {/* Dashboard Toggle Buttons - Compact with Coming Soon badges */}
-        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+        {/* Dashboard Toggle Buttons */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: { xs: 'center', sm: 'flex-end' },
+          width: { xs: '100%', sm: 'auto' },
+          ml: { sm: 'auto' },
+          mt: { xs: 1, sm: 0 }
+        }}>
           <ToggleButtonGroup
             value={dashboardType}
             exclusive
@@ -498,13 +519,14 @@ const Dashboard = () => {
             aria-label="dashboard type"
             size="small"
             sx={{ 
+              width: { xs: '100%', sm: 'auto' },
               '& .MuiToggleButton-root': {
                 px: 2,
-                my: 0.5,
                 py: 0.5,
                 fontSize: '0.75rem',
                 fontWeight: 500,
-                minWidth: 70,
+                flex: { xs: 1, sm: 'none' },
+                minWidth: { sm: 70 },
                 height: 32,
                 display: 'flex',
                 flexDirection: 'row',

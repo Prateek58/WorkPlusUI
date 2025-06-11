@@ -91,6 +91,68 @@ const WorkPlusReportsLanding: React.FC = () => {
     }
   };
 
+  const renderReportCard = (report: typeof reportTypes[0]) => (
+    <Grid item xs={6} sm={6} md={4} key={report.action}>
+      <Card
+        sx={{
+          ...cardStyles(theme),
+          height: '100%',
+          cursor: report.comingSoon ? 'not-allowed' : 'pointer',
+          opacity: report.comingSoon ? 0.6 : 1,
+          transition: 'all 0.3s ease',
+          '&:hover': report.comingSoon ? {} : {
+            transform: 'translateY(-4px)',
+            boxShadow: `0 8px 25px ${theme.palette.primary.main}20`,
+          },
+        }}
+        onClick={() => !report.comingSoon && handleReportCardClick(report.action)}
+      >
+        {report.comingSoon && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              bgcolor: 'warning.main',
+              color: 'white',
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: '0.75rem',
+              fontWeight: 'bold'
+            }}
+          >
+            Coming Soon
+          </Box>
+        )}
+        <Box sx={{ display: 'flex', p: 2 }}>
+          <Box sx={{ p: 2 }}>
+            {report.icon}
+          </Box>
+          <Box sx={{ flexGrow: 1, pl: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6" gutterBottom>
+                {report.title}
+              </Typography>
+              <IconButton size="small">
+                <MoreVertIcon />
+              </IconButton>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              {report.description}
+            </Typography>
+          </Box>
+        </Box>
+        <Divider sx={{ mt: 'auto' }} />
+        <Box sx={{ p: 2 }}>
+          <Typography variant="body2" color="primary">
+            {report.comingSoon ? 'This report is under development' : 'View Report'}
+          </Typography>
+        </Box>
+      </Card>
+    </Grid>
+  );
+
   return (
     
     <DashboardLayout>
@@ -108,71 +170,7 @@ const WorkPlusReportsLanding: React.FC = () => {
   </Box>
       <Box sx={{ px: 3 }}>
         <Grid container spacing={3}>
-          {reportTypes.map((report, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <Card sx={{ 
-                ...cardStyles(theme),
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                position: 'relative',
-                opacity: report.comingSoon ? 0.7 : 1,
-                cursor: report.comingSoon ? 'default' : 'pointer',
-                '&:hover': {
-                  boxShadow: report.comingSoon ? 'none' : theme.shadows[8]
-                }
-              }}
-              onClick={() => {
-                if (!report.comingSoon) {
-                  handleReportCardClick(report.action);
-                }
-              }}
-              >
-                {report.comingSoon && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      bgcolor: 'warning.main',
-                      color: 'white',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Coming Soon
-                  </Box>
-                )}
-                <Box sx={{ display: 'flex', p: 2 }}>
-                  <Box sx={{ p: 2 }}>
-                    {report.icon}
-                  </Box>
-                  <Box sx={{ flexGrow: 1, pl: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="h6" gutterBottom>
-                        {report.title}
-                      </Typography>
-                      <IconButton size="small">
-                        <MoreVertIcon />
-                      </IconButton>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {report.description}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Divider sx={{ mt: 'auto' }} />
-                <Box sx={{ p: 2 }}>
-                  <Typography variant="body2" color="primary">
-                    {report.comingSoon ? 'This report is under development' : 'View Report'}
-                  </Typography>
-                </Box>
-              </Card>
-            </Grid>
-          ))}
+          {reportTypes.map((report) => renderReportCard(report))}
         </Grid>
       </Box>
 
