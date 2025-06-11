@@ -89,8 +89,9 @@ const Login = () => {
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [credentials, setCredentials] = useState({
     username: 'admintest2',
-    //password: 'Admin123',
     password: 'Asdf@#1234_323'
+    //username: '',
+    //password: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

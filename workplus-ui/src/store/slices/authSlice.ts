@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { API_URL } from '../../Code/Common/config';
 
 interface AuthState {
   user: any;
@@ -20,11 +21,40 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { username: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('https://localhost:7160/api/Auth/login', credentials);
+      console.log('🔄 Attempting login to:', `${API_URL}/Auth/login`);
+      console.log('🔄 Credentials:', { username: credentials.username, password: '***' });
+      
+      const response = await axios.post(`${API_URL}/Auth/login`, credentials, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000, // 30 second timeout
+      });
+      
+      console.log('✅ Login successful:', response.data);
       localStorage.setItem('token', response.data.token);
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      console.error('❌ Login error:', error);
+      
+      if (error.code === 'ECONNABORTED') {
+        return rejectWithValue('Request timeout - please try again');
+      }
+      
+      if (error.response) {
+        console.error('❌ Response error:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data
+        });
+        return rejectWithValue(error.response?.data?.message || `Server error: ${error.response.status}`);
+      } else if (error.request) {
+        console.error('❌ Request error (no response):', error.request);
+        return rejectWithValue('No response from server - check your connection');
+      } else {
+        console.error('❌ Unknown error:', error.message);
+        return rejectWithValue(error.message || 'Login failed');
+      }
     }
   }
 );
@@ -39,7 +69,7 @@ export const register = createAsyncThunk(
     lastName: string;
   }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('https://localhost:7160/api/Auth/register', userData);
+      const response = await axios.post(`${API_URL}/Auth/register`, userData);
       localStorage.setItem('token', response.data.token);
       return response.data;
     } catch (error: any) {
@@ -56,6 +86,8 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       localStorage.removeItem('token');
+      // Notify theme provider about authentication change
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
     },
     clearError: (state) => {
       state.error = null;
@@ -72,6 +104,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.token = action.payload.token;
+        // Notify theme provider about authentication change
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -86,6 +120,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.token = action.payload.token;
+        // Notify theme provider about authentication change
+        window.dispatchEvent(new CustomEvent('authStateChanged'));
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;

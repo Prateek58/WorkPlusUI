@@ -47,9 +47,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../Common/config';
 
 // Configure axios defaults
-axios.defaults.baseURL = 'https://localhost:7160';
+axios.defaults.baseURL = API_URL.replace('/api', '');
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Add axios interceptor to handle CORS and JWT

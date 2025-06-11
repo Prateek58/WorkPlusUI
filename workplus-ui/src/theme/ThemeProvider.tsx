@@ -75,19 +75,93 @@ export const ThemeContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       } catch (error) {
         console.error('Error loading user theme settings:', error);
-        // Use defaults if loading fails
+        // In incognito mode or when not authenticated, use defaults
+        resetToDefaultsState();
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Only load settings if user is authenticated
-    const token = localStorage.getItem('token');
-    if (token) {
+    const resetToDefaultsState = () => {
+      setMode('light');
+      setThemeColors(DEFAULT_THEME_COLORS);
+      setUseCustomColorsState(false);
+    };
+
+    // Check if user is authenticated in multiple ways
+    const checkAuthentication = () => {
+      const token = localStorage.getItem('token');
+      
+      // Check if localStorage is accessible (might fail in some incognito modes)
+      try {
+        localStorage.setItem('__test__', 'test');
+        localStorage.removeItem('__test__');
+      } catch (e) {
+        console.warn('localStorage not available - likely in incognito mode');
+        setIsLoading(false);
+        return false;
+      }
+      
+      return token !== null;
+    };
+
+    if (checkAuthentication()) {
       loadUserSettings();
     } else {
+      console.log('User not authenticated or localStorage unavailable - using default theme settings');
+      resetToDefaultsState();
       setIsLoading(false);
     }
+  }, []);
+
+  // Listen for authentication changes (login/logout)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token') {
+        console.log('Authentication state changed, reloading theme settings');
+        
+        if (e.newValue) {
+          // User logged in - reload settings
+          setIsLoading(true);
+          userSettingsService.getCompleteThemeSettings()
+            .then(settings => {
+              setMode(settings.themeMode);
+              setUseCustomColorsState(settings.useCustomColors || false);
+              
+              if (settings.themeColors) {
+                setThemeColors(settings.themeColors);
+              }
+            })
+            .catch(error => {
+              console.error('Error loading theme settings after login:', error);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        } else {
+          // User logged out - reset to defaults
+          console.log('User logged out - resetting to default theme');
+          setMode('light');
+          setThemeColors(DEFAULT_THEME_COLORS);
+          setUseCustomColorsState(false);
+        }
+      }
+    };
+
+    // Listen for localStorage changes (when user logs in/out in same tab)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Custom event for same-tab login/logout
+    const handleAuthChange = () => {
+      handleStorageChange({ key: 'token', newValue: localStorage.getItem('token') } as StorageEvent);
+    };
+
+    window.addEventListener('authStateChanged', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authStateChanged', handleAuthChange);
+    };
   }, []);
 
   const toggleColorMode = async () => {

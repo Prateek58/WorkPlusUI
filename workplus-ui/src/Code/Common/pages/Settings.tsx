@@ -258,6 +258,11 @@ const Settings: React.FC = () => {
     
     // Auto-save and apply the preset immediately
     try {
+      // Enable custom colors if not already enabled
+      if (!useCustomColors) {
+        await setUseCustomColors(true);
+      }
+      
       await updateThemeColors(preset);
       setSnackbar({
         open: true,

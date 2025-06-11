@@ -15,6 +15,18 @@ axios.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle auth errors
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.warn('Authentication failed - token may be invalid or expired');
+      // Don't automatically redirect in incognito mode, just log the error
+    }
+    return Promise.reject(error);
+  }
+);
+
 // User Settings Types
 export interface UserSetting {
   id: number;
@@ -79,6 +91,22 @@ export const DEFAULT_THEME_COLORS: ThemeColors = {
 
 class UserSettingsService {
   private readonly baseUrl = `${API_URL}/user/usersettings`;
+
+  // Helper method to check if localStorage is available and user is authenticated
+  private isAuthenticated(): boolean {
+    try {
+      // Test localStorage accessibility
+      localStorage.setItem('__test__', 'test');
+      localStorage.removeItem('__test__');
+      
+      // Check for token
+      const token = localStorage.getItem('token');
+      return token !== null;
+    } catch (e) {
+      console.warn('localStorage not available or accessible');
+      return false;
+    }
+  }
 
   // General settings methods
   async getAllSettings(): Promise<UserSetting[]> {
@@ -239,18 +267,68 @@ class UserSettingsService {
     }
   }
 
+  async getUseCustomColors(): Promise<boolean> {
+    try {
+      console.log('Fetching use custom colors setting...');
+      const response = await axios.get(`${this.baseUrl}/theme/use-custom-colors`);
+      console.log('Use custom colors response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching use custom colors:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('API Error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data
+        });
+      }
+      return false; // Default to false
+    }
+  }
+
+  async setUseCustomColors(useCustomColors: boolean): Promise<boolean> {
+    try {
+      // Check authentication before making the request
+      if (!this.isAuthenticated()) {
+        console.warn('Not authenticated or localStorage unavailable - cannot save use custom colors setting');
+        return false;
+      }
+
+      console.log('Setting use custom colors:', useCustomColors);
+      const response = await axios.post(`${this.baseUrl}/theme/use-custom-colors`, { 
+        useCustomColors 
+      });
+      console.log('Set use custom colors response:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Error setting use custom colors:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          console.warn('Authentication failed while saving use custom colors setting');
+        }
+        console.error('API Error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data
+        });
+      }
+      return false;
+    }
+  }
+
   // Convenience methods for complete theme state management
   async getCompleteThemeSettings(): Promise<UserSettingsState> {
     try {
-      const [themeMode, themeColors] = await Promise.all([
+      const [themeMode, themeColors, useCustomColors] = await Promise.all([
         this.getThemeMode(),
-        this.getThemeColors()
+        this.getThemeColors(),
+        this.getUseCustomColors()
       ]);
 
       return {
         themeMode,
         themeColors: themeColors || undefined,
-        useCustomColors: themeColors !== null
+        useCustomColors
       };
     } catch (error) {
       console.error('Error fetching complete theme settings:', error);
@@ -263,8 +341,15 @@ class UserSettingsService {
 
   async saveCompleteThemeSettings(settings: UserSettingsState): Promise<boolean> {
     try {
+      // Check if we can access localStorage and have a token
+      if (!this.isAuthenticated()) {
+        console.warn('Not authenticated or localStorage unavailable - cannot save complete theme settings');
+        return false;
+      }
+
       const promises: Promise<any>[] = [
-        this.setThemeMode(settings.themeMode)
+        this.setThemeMode(settings.themeMode),
+        this.setUseCustomColors(settings.useCustomColors || false)
       ];
 
       if (settings.useCustomColors && settings.themeColors) {
@@ -278,6 +363,11 @@ class UserSettingsService {
       return results.every(result => result === true);
     } catch (error) {
       console.error('Error saving complete theme settings:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          console.warn('Authentication failed while saving theme settings - user may need to login again');
+        }
+      }
       return false;
     }
   }
@@ -287,6 +377,7 @@ class UserSettingsService {
     try {
       await Promise.all([
         this.setThemeMode('light'),
+        this.setUseCustomColors(false),
         this.deleteSetting('theme_colors')
       ]);
       return true;
