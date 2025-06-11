@@ -251,7 +251,7 @@ const Dashboard = () => {
   const renderDefaultDashboard = () => (
     <Grid container spacing={2}>
       {/* Stats Cards */}
-      <Grid item xs={12} md={3}>
+      <Grid item xs={6} md={3}>
         <Card sx={cardStyles(theme)}>
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             Today's Jobs
@@ -270,7 +270,7 @@ const Dashboard = () => {
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={3}>
+      <Grid item xs={6} md={3}>
         <Card sx={cardStyles(theme)}>
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             Worker Attendance
@@ -289,7 +289,7 @@ const Dashboard = () => {
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={3}>
+      <Grid item xs={6} md={3}>
         <Card sx={cardStyles(theme)}>
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             Total Jobs
@@ -308,7 +308,7 @@ const Dashboard = () => {
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={3}>
+      <Grid item xs={6} md={3}>
         <Card sx={cardStyles(theme)}>
           <Typography variant="subtitle1" color="text.secondary" gutterBottom>
             Total Hours

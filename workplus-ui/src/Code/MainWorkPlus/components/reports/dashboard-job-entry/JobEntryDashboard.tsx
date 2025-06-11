@@ -461,7 +461,7 @@ const JobEntryDashboard: React.FC<JobEntryDashboardProps> = ({ embedded = false 
       {/* Dashboard Content */}
       <Grid container spacing={3}>
         {/* Summary Statistics Cards */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <Card sx={cardStyles(theme)}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -477,7 +477,7 @@ const JobEntryDashboard: React.FC<JobEntryDashboardProps> = ({ embedded = false 
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <Card sx={cardStyles(theme)}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -493,7 +493,7 @@ const JobEntryDashboard: React.FC<JobEntryDashboardProps> = ({ embedded = false 
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <Card sx={cardStyles(theme)}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -509,7 +509,7 @@ const JobEntryDashboard: React.FC<JobEntryDashboardProps> = ({ embedded = false 
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <Card sx={cardStyles(theme)}>
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>

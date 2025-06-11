@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
 import {
   Box,
   Drawer,
@@ -86,10 +86,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user } = useSelector((state: RootState) => state.auth);
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    if (window.innerWidth < 600) {
+      setMobileOpen(!mobileOpen);
+      if (!mobileOpen) {
+        setOpen(true);
+      }
+    }
   };
 
   const toggleDrawer = () => {
+    if (window.innerWidth < 600) {
+      setMobileOpen(false);
+    }
     setOpen(!open);
   };
 
@@ -116,6 +124,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   const handleNavigate = (path: string) => {
     navigate(path);
+    if (window.innerWidth < 600) {
+      setMobileOpen(false);
+    }
     handleProfileMenuClose();
   };
 
@@ -344,37 +355,50 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     </Box>
   );
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 600) {
+        setMobileOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <Box sx={{ display: 'flex', bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
       <AppBar
         position="fixed"
         sx={{
-          bgcolor: theme.palette.mode === 'dark' ? 'transparent' : 'background.paper',
-          boxShadow: 'none',
           width: { sm: `calc(100% - ${open ? drawerWidth : collapsedWidth}px)` },
           ml: { sm: `${open ? drawerWidth : collapsedWidth}px` },
-          transition: (theme) => theme.transitions.create(['width', 'margin'], {
+          transition: (theme) => theme.transitions.create(['margin', 'width'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
+          bgcolor: 'primary.main',
+          boxShadow: 1,
         }}
       >
-        <Toolbar
-          sx={{
-            bgcolor: theme.palette.mode === 'dark' ? '#0A1929' : 'background.paper',
-            minHeight: '64px !important',
-          }}
-        >
+        <Toolbar>
           <IconButton
             color="inherit"
+            aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ 
+              mr: 2, 
+              display: { sm: 'none' },
+              '& .MuiSvgIcon-root': {
+                color: 'white',
+              }
+            }}
           >
             <MenuIcon />
           </IconButton>
           
-          <Box sx={{  flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <SearchIcon sx={{ position: 'absolute', left: 8, color: 'text.secondary' }} />
               <input
@@ -417,61 +441,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </Toolbar>
       </AppBar>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleProfileMenuClose}
-        onClick={handleProfileMenuClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            width: 220,
-            py: 0.5,
-          },
-        }}
-      >
-        <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="subtitle2" noWrap>
-            {user?.username || 'User'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {user?.email || 'user@example.com'}
-          </Typography>
-        </Box>
-        <Divider sx={{ my: 0.5 }} />
-        <MenuItem onClick={() => handleNavigate('/profile')}>
-          <ListItemIcon>
-            <PersonIcon fontSize="small" />
-          </ListItemIcon>
-          My Profile
-        </MenuItem>
-        <MenuItem onClick={() => handleNavigate('/settings')}>
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" />
-          </ListItemIcon>
-          Settings
-        </MenuItem>
-        <MenuItem onClick={() => handleNavigate('/help')}>
-          <ListItemIcon>
-            <HelpIcon fontSize="small" />
-          </ListItemIcon>
-          Help
-        </MenuItem>
-        <Divider sx={{ my: 0.5 }} />
-        <MenuItem onClick={handleLogout}>
-          <ListItemIcon>
-            <LogoutIcon fontSize="small" />
-          </ListItemIcon>
-          Logout
-        </MenuItem>
-      </Menu>
-
       <Box 
         component="nav" 
         sx={{ 
-          width: open ? drawerWidth : collapsedWidth,
+          width: { sm: open ? drawerWidth : collapsedWidth },
           flexShrink: 0,
           transition: (theme) => theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
@@ -490,6 +463,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             display: { xs: 'block', sm: 'none' },
             '& .MuiDrawer-paper': {
               width: drawerWidth,
+              boxSizing: 'border-box',
             },
           }}
         >
@@ -505,6 +479,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
               }),
+              boxSizing: 'border-box',
             },
           }}
           open={open}
@@ -517,13 +492,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 2,
+          p: { xs: 1, sm: 2 },
           width: { sm: `calc(100% - ${open ? drawerWidth : collapsedWidth}px)` },
           mt: 7,
           transition: (theme) => theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
+          overflow: 'auto',
+          maxWidth: '100%',
         }}
       >
         {children}
