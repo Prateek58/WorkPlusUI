@@ -32,6 +32,7 @@ import GroupMemberFormDialog from './GroupMemberFormDialog';
 import { 
   GroupMember, 
   GroupMemberCreate, 
+  GroupMemberBulkCreate, 
   JobGroup, 
   Worker, 
   useGroupMemberService 
@@ -62,6 +63,7 @@ const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({ open, onClose }
     getGroupMembers,
     getGroupMembersByGroup,
     createGroupMember,
+    createGroupMembersBulk,
     deleteGroupMember,
     getJobGroups,
     getWorkers
@@ -193,6 +195,28 @@ const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({ open, onClose }
       console.error('Error adding worker to group:', error);
       // Show more specific error if available
       const errorMessage = error.response?.data || 'An error occurred while adding the worker to the group.';
+      showConfirmDialog({
+        title: 'Error',
+        message: errorMessage,
+        showCancel: false,
+        confirmText: 'OK',
+        onConfirm: () => {}
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFormSubmitBulk = async (bulkGroupMember: GroupMemberBulkCreate) => {
+    setLoading(true);
+    try {
+      await createGroupMembersBulk(bulkGroupMember);
+      await loadGroupMembers(selectedGroupId !== '' ? selectedGroupId as number : undefined);
+      handleFormClose();
+    } catch (error: any) {
+      console.error('Error adding workers to group:', error);
+      // Show more specific error if available
+      const errorMessage = error.response?.data || 'An error occurred while adding the workers to the group.';
       showConfirmDialog({
         title: 'Error',
         message: errorMessage,
@@ -364,6 +388,7 @@ const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({ open, onClose }
         open={isFormOpen}
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
+        onSubmitBulk={handleFormSubmitBulk}
         jobGroups={jobGroups}
         workers={workers}
         selectedGroupId={selectedGroupId !== '' ? selectedGroupId as number : undefined}
@@ -372,4 +397,4 @@ const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({ open, onClose }
   );
 };
 
-export default GroupMembersDialog; 
+export default GroupMembersDialog;

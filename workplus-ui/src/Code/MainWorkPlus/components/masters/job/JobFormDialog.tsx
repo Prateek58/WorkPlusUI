@@ -98,10 +98,18 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
     const { name, value } = e.target;
     if (!name) return;
     
-    setFormData({
+    // Clear rate values when job type changes
+    const updatedFormData = {
       ...formData,
       [name]: value
-    });
+    };
+    
+    if (name === 'jobTypeId') {
+      updatedFormData.ratePerHour = null;
+      updatedFormData.ratePerItem = null;
+    }
+    
+    setFormData(updatedFormData);
   };
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +128,10 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
     }
   };
 
+  // Get selected job type name for conditional rendering
+  const selectedJobType = jobTypes.find(type => type.jobTypeId === formData.jobTypeId);
+  const selectedJobTypeName = selectedJobType?.jobTypeName?.toLowerCase() || '';
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
@@ -133,7 +145,7 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
         </Box>
       </DialogTitle>
       <DialogContent dividers>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Grid mb={2} container spacing={2} sx={{ mt: 1, mb: 2 }}>
           <Grid item xs={12} md={6}>
             <TextField
               name="jobName"
@@ -146,7 +158,7 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
               helperText={errors.jobName}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid mb={2} item xs={12} md={6}>
             <FormControl fullWidth required error={!!errors.jobTypeId}>
               <InputLabel id="job-type-label">Job Type</InputLabel>
               <Select
@@ -166,35 +178,39 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
               {errors.jobTypeId && <FormHelperText>{errors.jobTypeId}</FormHelperText>}
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              name="ratePerItem"
-              label="Rate Per Item"
-              fullWidth
-              type="number"
-              InputProps={{
-                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                inputProps: { step: 0.01, min: 0 }
-              }}
-              value={formData.ratePerItem ?? ''}
-              onChange={handleNumberChange}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              name="ratePerHour"
-              label="Rate Per Hour"
-              fullWidth
-              type="number"
-              InputProps={{
-                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                inputProps: { step: 0.01, min: 0 }
-              }}
-              value={formData.ratePerHour ?? ''}
-              onChange={handleNumberChange}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
+          {selectedJobTypeName !== 'hourly' && (
+            <Grid mb={2} item xs={12} md={6}>
+              <TextField
+                name="ratePerItem"
+                label="Rate Per Item"
+                fullWidth
+                type="number"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                  inputProps: { step: 0.01, min: 0 }
+                }}
+                value={formData.ratePerItem ?? ''}
+                onChange={handleNumberChange}
+              />
+            </Grid>
+          )}
+          {selectedJobTypeName !== 'rateperitem' && (
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="ratePerHour"
+                label="Rate Per Hour"
+                fullWidth
+                type="number"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                  inputProps: { step: 0.01, min: 0 }
+                }}
+                value={formData.ratePerHour ?? ''}
+                onChange={handleNumberChange}
+              />
+            </Grid>
+          )}
+          <Grid mb={2} item xs={12} md={6}>
             <TextField
               name="expectedHours"
               label="Expected Hours"
@@ -207,7 +223,7 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
               onChange={handleNumberChange}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid mb={2} item xs={12} md={6}>
             <TextField
               name="expectedItemsPerHour"
               label="Expected Items Per Hour"
@@ -220,7 +236,7 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
               onChange={handleNumberChange}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid mb={2} item xs={12} md={6}>
             <TextField
               name="incentiveBonusRate"
               label="Incentive Bonus Rate"
@@ -234,7 +250,7 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
               onChange={handleNumberChange}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid mb={2} item xs={12} md={6}>
             <TextField
               name="penaltyRate"
               label="Penalty Rate"
@@ -248,7 +264,7 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
               onChange={handleNumberChange}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid mb={2} item xs={12} md={6}>
             <FormControl fullWidth>
               <InputLabel id="incentive-type-label">Incentive Type</InputLabel>
               <Select
@@ -277,4 +293,4 @@ const JobFormDialog: React.FC<JobFormDialogProps> = ({
   );
 };
 
-export default JobFormDialog; 
+export default JobFormDialog;

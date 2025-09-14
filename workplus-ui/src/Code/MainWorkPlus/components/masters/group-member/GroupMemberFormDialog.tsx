@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,15 +13,19 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  FormHelperText
+  FormHelperText,
+  Autocomplete,
+  TextField,
+  Chip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { GroupMemberCreate, JobGroup, Worker } from './groupMemberService';
+import { GroupMemberCreate, GroupMemberBulkCreate, JobGroup, Worker, useGroupMemberService } from './groupMemberService';
 
 interface GroupMemberFormDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (groupMember: GroupMemberCreate) => void;
+  onSubmitBulk: (bulkGroupMember: GroupMemberBulkCreate) => void;
   jobGroups: JobGroup[];
   workers: Worker[];
   selectedGroupId?: number;
@@ -31,14 +35,16 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
   open,
   onClose,
   onSubmit,
+  onSubmitBulk,
   jobGroups,
   workers,
   selectedGroupId
 }) => {
   const theme = useTheme();
+  const { getGroupMembersByGroup } = useGroupMemberService();
   const [groupId, setGroupId] = useState<number | ''>('');
-  const [workerId, setWorkerId] = useState<number | ''>('');
-  const [errors, setErrors] = useState<{ groupId?: string; workerId?: string }>({});
+  const [workerIds, setWorkerIds] = useState<number[]>([]);
+  const [errors, setErrors] = useState<{ groupId?: string; workerIds?: string }>({});
   const [availableWorkers, setAvailableWorkers] = useState<Worker[]>([]);
 
   useEffect(() => {
@@ -53,7 +59,7 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
         setGroupId('');
       }
       
-      setWorkerId('');
+      setWorkerIds([]);
       
       // Filter active workers
       const activeWorkers = workers.filter(worker => worker.isActive !== false);
@@ -61,15 +67,45 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
     }
   }, [open, workers, selectedGroupId]);
 
+  // Filter out existing group members when group is selected
+  const filterWorkersForGroup = useCallback(async () => {
+    if (groupId && typeof groupId === 'number') {
+      try {
+        // Get existing group members
+        const existingMembers = await getGroupMembersByGroup(groupId);
+        const existingWorkerIds = existingMembers.map(member => member.workerId);
+        
+        // Filter out existing members from available workers
+        const activeWorkers = workers.filter(worker => worker.isActive !== false);
+        const filteredWorkers = activeWorkers.filter(worker => !existingWorkerIds.includes(worker.workerId));
+        
+        setAvailableWorkers(filteredWorkers);
+      } catch (error) {
+        console.error('Error fetching group members:', error);
+        // Fallback to all active workers if error occurs
+        const activeWorkers = workers.filter(worker => worker.isActive !== false);
+        setAvailableWorkers(activeWorkers);
+      }
+    } else {
+      // No group selected, show all active workers
+      const activeWorkers = workers.filter(worker => worker.isActive !== false);
+      setAvailableWorkers(activeWorkers);
+    }
+  }, [groupId, workers]);
+
+  useEffect(() => {
+    filterWorkersForGroup();
+  }, [filterWorkersForGroup]);
+
   const validateForm = (): boolean => {
-    const newErrors: { groupId?: string; workerId?: string } = {};
+    const newErrors: { groupId?: string; workerIds?: string } = {};
     
     if (!groupId) {
       newErrors.groupId = 'Job group is required';
     }
     
-    if (!workerId) {
-      newErrors.workerId = 'Worker is required';
+    if (workerIds.length === 0) {
+      newErrors.workerIds = 'At least one worker is required';
     }
     
     setErrors(newErrors);
@@ -78,10 +114,19 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit({
-        groupId: groupId as number,
-        workerId: workerId as number
-      });
+      if (workerIds.length === 1) {
+        // Use single creation for one worker
+        onSubmit({
+          groupId: groupId as number,
+          workerId: workerIds[0]
+        });
+      } else {
+        // Use bulk creation for multiple workers
+        onSubmitBulk({
+          groupId: groupId as number,
+          workerIds: workerIds
+        });
+      }
     }
   };
 
@@ -91,11 +136,16 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
+      scroll="paper"
       PaperProps={{
         sx: {
           bgcolor: theme.palette.background.default,
           boxShadow: 24,
           borderRadius: 2,
+          maxHeight: '90vh',
+          height: 'auto',
+          display: 'flex',
+          flexDirection: 'column'
         }
       }}
     >
@@ -108,7 +158,7 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
         borderBottom: `1px solid ${theme.palette.divider}`
       }}>
         <Typography variant="h6" component="div">
-          Add Worker to Group
+          Add Workers to Group
         </Typography>
         <IconButton
           aria-label="close"
@@ -123,8 +173,8 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ p: 2, mt: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <DialogContent sx={{ p: 2, mt: 2, overflow: 'visible', flex: '1 1 auto', minHeight: 0 }}>
+        <Box mt={3} sx={{ display: 'flex', flexDirection: 'column', gap: 3, minHeight: 0 }}>
           <FormControl fullWidth error={!!errors.groupId} disabled={!!selectedGroupId}>
             <InputLabel id="group-label">Job Group</InputLabel>
             <Select
@@ -142,22 +192,75 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
             {errors.groupId && <FormHelperText>{errors.groupId}</FormHelperText>}
           </FormControl>
 
-          <FormControl fullWidth error={!!errors.workerId}>
-            <InputLabel id="worker-label">Worker</InputLabel>
-            <Select
-              labelId="worker-label"
-              value={workerId}
-              onChange={(e) => setWorkerId(e.target.value as number)}
-              label="Worker"
-            >
-              {availableWorkers.map((worker) => (
-                <MenuItem key={worker.workerId} value={worker.workerId}>
-                  {worker.fullName}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.workerId && <FormHelperText>{errors.workerId}</FormHelperText>}
-          </FormControl>
+          <Autocomplete
+            multiple
+            id="workers-autocomplete"
+            options={availableWorkers}
+            getOptionLabel={(option) => option.fullName}
+            value={availableWorkers.filter(worker => workerIds.includes(worker.workerId))}
+            onChange={(event, newValue) => {
+              setWorkerIds(newValue.map(worker => worker.workerId));
+            }}
+            filterSelectedOptions
+            renderTags={(tagValue, getTagProps) =>
+              tagValue.map((option, index) => (
+                <Chip
+                  variant="outlined"
+                  label={option.fullName}
+                  {...getTagProps({ index })}
+                  key={option.workerId}
+                />
+              ))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Workers"
+                placeholder="Search and select workers..."
+                error={!!errors.workerIds}
+                helperText={errors.workerIds}
+              />
+            )}
+            sx={{
+              '& .MuiAutocomplete-tag': {
+                maxWidth: '200px',
+                margin: '2px',
+                height: 'auto'
+              },
+              '& .MuiOutlinedInput-root': {
+                minHeight: 'auto',
+                height: 'auto',
+                padding: '8px 14px',
+                flexWrap: 'wrap',
+                alignItems: 'flex-start',
+                overflow: 'visible',
+                '&.Mui-focused': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderWidth: '2px'
+                  }
+                }
+              },
+              '& .MuiAutocomplete-inputRoot': {
+                paddingRight: '39px !important',
+                height: 'auto !important',
+                minHeight: 'auto !important'
+              },
+              '& .MuiAutocomplete-input': {
+                minWidth: '30px',
+                flexGrow: 1,
+                height: 'auto'
+              },
+              '& .MuiAutocomplete-endAdornment': {
+                position: 'absolute',
+                right: '9px',
+                top: '12px'
+              },
+              '& .MuiInputBase-root': {
+                height: 'auto !important',
+                minHeight: 'auto !important'
+              }
+            }}
+          />
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
@@ -172,4 +275,4 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
   );
 };
 
-export default GroupMemberFormDialog; 
+export default GroupMemberFormDialog;

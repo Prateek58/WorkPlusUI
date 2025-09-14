@@ -15,6 +15,11 @@ export interface GroupMemberCreate {
   workerId: number;
 }
 
+export interface GroupMemberBulkCreate {
+  groupId: number;
+  workerIds: number[];
+}
+
 export interface Worker {
   workerId: number;
   fullName: string;
@@ -59,6 +64,13 @@ export const useGroupMemberService = () => {
     );
   };
 
+  const createGroupMembersBulk = async (bulkGroupMember: GroupMemberBulkCreate): Promise<GroupMember[]> => {
+    return callApi(
+      () => axios.post(`${API_URL}/MasterData/group-members/bulk`, bulkGroupMember).then(res => res.data),
+      { loadingMessage: 'Adding workers to group...' }
+    );
+  };
+
   const deleteGroupMember = async (id: number): Promise<void> => {
     return callApi(
       () => axios.delete(`${API_URL}/MasterData/group-members/${id}`).then(res => res.data),
@@ -87,8 +99,9 @@ export const useGroupMemberService = () => {
     getGroupMembersByGroup,
     getGroupMember,
     createGroupMember,
+    createGroupMembersBulk,
     deleteGroupMember,
     getJobGroups,
     getWorkers
   };
-}; 
+};

@@ -335,16 +335,17 @@ const JobWork = () => {
     }
   };
 
-  const handleSearch = async () => {
+  const handleSearchWithPagination = async (paginationOverride?: any) => {
+    const currentPagination = paginationOverride || pagination;
     try {
       setLoading(true);
       setError(null);
       const response = await jobWorkService.getJobWorks({
         ...filters,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-        sortBy: pagination.sortBy,
-        sortOrder: pagination.sortOrder
+        page: currentPagination.page,
+        pageSize: currentPagination.pageSize,
+        sortBy: currentPagination.sortBy,
+        sortOrder: currentPagination.sortOrder
       });
       setJobWorks(response.data);
       setPagination(prev => ({ ...prev, total: response.total }));
@@ -354,6 +355,10 @@ const JobWork = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = async () => {
+    await handleSearchWithPagination();
   };
 
   const handleSummary = async () => {
@@ -571,10 +576,20 @@ const JobWork = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    // Update the page in the pagination state
-    setPagination(prev => ({ ...prev, page: newPage }));
-    // Fetch data with the new pagination settings
-    handleSearch();
+    const newPagination = { ...pagination, page: newPage };
+    setPagination(newPagination);
+    handleSearchWithPagination(newPagination);
+  };
+
+  const handlePageSizeChange = (event: any) => {
+    const newPageSize = Number(event.target.value);
+    const newPagination = {
+      ...pagination,
+      pageSize: newPageSize,
+      page: 1 // Reset to first page when changing page size
+    };
+    setPagination(newPagination);
+    handleSearchWithPagination(newPagination);
   };
 
   const handleResetFilters = () => {
@@ -1350,8 +1365,40 @@ const JobWork = () => {
               </Grid>
             </Box>
           )}
-          {/* Pagination */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          {/* Pagination Controls */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            py: 3,
+            flexWrap: 'wrap',
+            gap: 2
+          }}>
+            {/* Page Size Selector */}
+            <Box ml={5} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Rows per page:
+              </Typography>
+              <FormControl size="small" sx={{ minWidth: 80 }}>
+                <Select
+                  value={pagination.pageSize}
+                  onChange={handlePageSizeChange}
+                  variant="outlined"
+                >
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                  <MenuItem value={100}>100</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Records Info */}
+            <Typography variant="body2" color="text.secondary">
+              Showing {Math.min((pagination.page - 1) * pagination.pageSize + 1, pagination.total)}-{Math.min(pagination.page * pagination.pageSize, pagination.total)} of {pagination.total} records
+            </Typography>
+
+            {/* Pagination */}
             <Pagination
               count={Math.ceil(pagination.total / pagination.pageSize)}
               page={pagination.page}
@@ -1361,6 +1408,7 @@ const JobWork = () => {
               color="primary"
               showFirstButton
               showLastButton
+              size="small"
             />
           </Box>
         </Paper>

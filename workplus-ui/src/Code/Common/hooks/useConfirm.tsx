@@ -63,7 +63,7 @@ export const ConfirmProvider: React.FC<{ children: ReactNode }> = ({ children })
       {children}
       <Dialog open={open} onClose={handleCancel} maxWidth="sm" fullWidth>
         <DialogTitle>
-          <Typography variant="h6">{dialogProps.title}</Typography>
+          {dialogProps.title}
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -91,4 +91,4 @@ export const useConfirm = (): ConfirmContextType => {
     throw new Error('useConfirm must be used within a ConfirmProvider');
   }
   return context;
-}; 
+};

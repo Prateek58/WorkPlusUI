@@ -335,16 +335,37 @@ const LorryReceipt = () => {
   };
 
   const handleSearch = async () => {
+    await handleSearchWithPagination();
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const newPagination = { ...pagination, page: newPage };
+    setPagination(newPagination);
+    handleSearchWithPagination(newPagination);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    const newPagination = {
+      ...pagination,
+      page: 1,
+      pageSize: newPageSize
+    };
+    setPagination(newPagination);
+    handleSearchWithPagination(newPagination);
+  };
+
+  const handleSearchWithPagination = async (paginationOverride?: any) => {
+    const currentPagination = paginationOverride || pagination;
     try {
       setLoading(true);
       setError(null);
       
       const response = await lrService.getLREntries({
         ...filters,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-        sortBy: pagination.sortBy,
-        sortOrder: pagination.sortOrder,
+        page: currentPagination.page,
+        pageSize: currentPagination.pageSize,
+        sortBy: currentPagination.sortBy,
+        sortOrder: currentPagination.sortOrder,
       });
 
       setLrEntries(response.data);
@@ -358,11 +379,6 @@ const LorryReceipt = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
-    handleSearch();
   };
 
   const handleResetFilters = () => {
@@ -1174,7 +1190,46 @@ const LorryReceipt = () => {
             </Box>
           )}
           {/* Pagination */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            py: 3,
+            flexWrap: 'wrap',
+            gap: 2
+          }}>
+            {/* Page Size Selector */}
+            <Box ml={5} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
+                Rows per page:
+              </Typography>
+              <FormControl size="small" sx={{ minWidth: 80 }}>
+                <Select
+                  value={pagination.pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  displayEmpty
+                >
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                  <MenuItem value={100}>100</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
+                entries
+              </Typography>
+            </Box>
+
+            {/* Records Info */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Showing {((pagination.page - 1) * pagination.pageSize) + 1} to{' '}
+                {Math.min(pagination.page * pagination.pageSize, pagination.total)} of{' '}
+                {pagination.total} entries
+              </Typography>
+            </Box>
+
+            {/* Pagination Component */}
             <Pagination
               count={Math.ceil(pagination.total / pagination.pageSize)}
               page={pagination.page}
@@ -1192,4 +1247,4 @@ const LorryReceipt = () => {
   );
 };
 
-export default LorryReceipt; 
+export default LorryReceipt;
