@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -163,6 +163,37 @@ const JobWork = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobWorks, setJobWorks] = useState<any[]>([]);
+
+  // Memoize footer calculations to improve performance
+  const footerTotals = useMemo(() => {
+    if (!Array.isArray(jobWorks) || jobWorks.length === 0) {
+      return {
+        totalHours: 0,
+        totalItems: 0,
+        totalAmount: 0,
+        avgRate: 0,
+        totalRecords: 0
+      };
+    }
+
+    const totalHours = jobWorks.reduce((sum, job) => sum + (job.qtyHours || 0), 0);
+    const totalItems = jobWorks.reduce((sum, job) => sum + (job.qtyItems || 0), 0);
+    const totalAmount = jobWorks.reduce((sum, job) => sum + (job.totalAmount || 0), 0);
+    const totalRecords = jobWorks.length;
+    
+    const validJobs = jobWorks.filter(job => job.rateForJob && job.rateForJob > 0);
+    const avgRate = validJobs.length > 0 
+      ? validJobs.reduce((sum, job) => sum + (job.rateForJob || 0), 0) / validJobs.length
+      : 0;
+
+    return {
+      totalHours,
+      totalItems,
+      totalAmount,
+      avgRate,
+      totalRecords
+    };
+  }, [jobWorks]);
   const [summary, setSummary] = useState<SummaryState | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     startDate: null,
@@ -1209,39 +1240,116 @@ const JobWork = () => {
                     </TableRow>
                   ))
                 )}
-                {/* Add total row at the bottom if we have job works */}
-                {Array.isArray(jobWorks) && jobWorks.length > 0 && (
-                  <TableRow 
-                    sx={{ 
-                      fontWeight: 'bold',
-                      backgroundColor: (theme) => theme.palette.mode === 'dark' 
-                        ? theme.palette.grey[800] 
-                        : theme.palette.grey[100],
-                      '& td': { 
-                        borderTop: (theme) => `2px solid ${theme.palette.divider}`,
-                        fontSize: '1.1rem',
-                        color: (theme) => theme.palette.text.primary,
-                        fontWeight: 'bold'
-                      }
-                    }}
-                  >
-                    <TableCell colSpan={8} align="right" sx={{ 
-                      fontWeight: 'bold',
-                      color: (theme) => theme.palette.text.primary
-                    }}>
-                      Total:
-                    </TableCell>
-                    <TableCell align="right" sx={{ 
-                      fontWeight: 'bold', 
-                      color: (theme) => theme.palette.primary.main
-                    }}>
-                      ₹{jobWorks.reduce((sum, job) => sum + (job.totalAmount || 0), 0).toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                )}
+
               </TableBody>
             </Table>
           </TableContainer>
+          
+          {/* Comprehensive footer row outside table for full width */}
+          {Array.isArray(jobWorks) && jobWorks.length > 0 && (
+            <Box 
+              sx={{ 
+                backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                  ? theme.palette.grey[800] 
+                  : theme.palette.grey[100],
+                borderTop: (theme) => `2px solid ${theme.palette.divider}`,
+                p: 2,
+                overflow: 'auto'
+              }}
+            >
+              <Grid container spacing={2} sx={{ minWidth: '100%' }}>
+                <Grid item xs={12} md={2}>
+                  <Typography variant="h6" sx={{ 
+                    fontWeight: 'bold',
+                    color: (theme) => theme.palette.text.primary,
+                    fontSize: '1rem',
+                    textAlign: 'center'
+                  }}>
+                    TOTALS
+                    <br />
+                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                      ({footerTotals.totalRecords} records)
+                    </Typography>
+                  </Typography>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Hours
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {footerTotals.totalHours.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.primary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Avg Rate
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      ₹{footerTotals.avgRate.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.secondary.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Items
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {footerTotals.totalItems}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.success.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Total Amount
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      ₹{footerTotals.totalAmount.toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={6} md={1.5}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="caption" sx={{ 
+                      fontWeight: 'bold', 
+                      color: (theme) => theme.palette.info.main,
+                      fontSize: '0.75rem'
+                    }}>
+                      Rate*8
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      ₹{(footerTotals.avgRate * 8).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
           {/* Pagination */}
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
             <Pagination
@@ -1261,4 +1369,4 @@ const JobWork = () => {
   );
 };
 
-export default JobWork; 
+export default JobWork;
