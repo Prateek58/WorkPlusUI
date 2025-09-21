@@ -16,9 +16,18 @@ import {
   FormHelperText,
   Autocomplete,
   TextField,
-  Chip
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import GroupIcon from '@mui/icons-material/Group';
 import { GroupMemberCreate, GroupMemberBulkCreate, JobGroup, Worker, useGroupMemberService } from './groupMemberService';
 
 interface GroupMemberFormDialogProps {
@@ -46,6 +55,9 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
   const [workerIds, setWorkerIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<{ groupId?: string; workerIds?: string }>({});
   const [availableWorkers, setAvailableWorkers] = useState<Worker[]>([]);
+  const [showMembersDialog, setShowMembersDialog] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -130,8 +142,28 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
     }
   };
 
+  const handleShowMembers = async () => {
+    if (groupId && typeof groupId === 'number') {
+      setLoadingMembers(true);
+      try {
+        const members = await getGroupMembersByGroup(groupId);
+        setGroupMembers(members);
+        setShowMembersDialog(true);
+      } catch (error) {
+        console.error('Error fetching group members:', error);
+        setGroupMembers([]);
+        setShowMembersDialog(true);
+      } finally {
+        setLoadingMembers(false);
+      }
+    }
+  };
+
+  const selectedGroupName = jobGroups.find(group => group.groupId === groupId)?.groupName || '';
+
   return (
-    <Dialog
+    <>
+      <Dialog
       open={open}
       onClose={onClose}
       maxWidth="sm"
@@ -175,22 +207,42 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
       </DialogTitle>
       <DialogContent sx={{ p: 2, mt: 2, overflow: 'visible', flex: '1 1 auto', minHeight: 0 }}>
         <Box mt={3} sx={{ display: 'flex', flexDirection: 'column', gap: 3, minHeight: 0 }}>
-          <FormControl fullWidth error={!!errors.groupId} disabled={!!selectedGroupId}>
-            <InputLabel id="group-label">Job Group</InputLabel>
-            <Select
-              labelId="group-label"
-              value={groupId}
-              onChange={(e) => setGroupId(e.target.value as number)}
-              label="Job Group"
-            >
-              {jobGroups.map((group) => (
-                <MenuItem key={group.groupId} value={group.groupId}>
-                  {group.groupName} (Min: {group.minWorkers}, Max: {group.maxWorkers})
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.groupId && <FormHelperText>{errors.groupId}</FormHelperText>}
-          </FormControl>
+          <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+            <FormControl fullWidth error={!!errors.groupId} disabled={!!selectedGroupId}>
+              <InputLabel id="group-label">Job Group</InputLabel>
+              <Select
+                labelId="group-label"
+                value={groupId}
+                onChange={(e) => setGroupId(e.target.value as number)}
+                label="Job Group"
+              >
+                {jobGroups.map((group) => (
+                  <MenuItem key={group.groupId} value={group.groupId}>
+                    {group.groupName} (Min: {group.minWorkers}, Max: {group.maxWorkers})
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.groupId && <FormHelperText>{errors.groupId}</FormHelperText>}
+            </FormControl>
+            
+            {groupId && (
+              <Button
+                variant="outlined"
+                 size="small"
+                 startIcon={<GroupIcon />}
+                 onClick={handleShowMembers}
+                 disabled={loadingMembers}
+                 sx={{ 
+                   minWidth: 'auto',
+                   whiteSpace: 'nowrap',
+                   height: '56px',
+                   px: 2
+                 }}
+               >
+                 {loadingMembers ? <CircularProgress size={16} /> : 'Show Members'}
+              </Button>
+            )}
+          </Box>
 
           <Autocomplete
             multiple
@@ -271,7 +323,105 @@ const GroupMemberFormDialog: React.FC<GroupMemberFormDialogProps> = ({
           Add
         </Button>
       </DialogActions>
-    </Dialog>
+      </Dialog>
+
+      {/* Group Members Dialog */}
+      <Dialog
+        open={showMembersDialog}
+        onClose={() => setShowMembersDialog(false)}
+        maxWidth="md"
+        fullWidth
+        scroll="paper"
+        PaperProps={{
+          sx: {
+            bgcolor: theme.palette.background.default,
+            boxShadow: 24,
+            borderRadius: 2,
+            maxHeight: '90vh',
+            height: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          m: 0, 
+          p: 2, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          borderBottom: `1px solid ${theme.palette.divider}`
+        }}>
+          <Typography variant="h6" component="div">
+            Group Members - {selectedGroupName}
+          </Typography>
+          <IconButton
+            aria-label="close"
+            onClick={() => setShowMembersDialog(false)}
+            sx={{
+              color: theme.palette.text.secondary,
+              '&:hover': {
+                color: theme.palette.text.primary,
+              }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 2, overflow: 'auto', flex: '1 1 auto' }}>
+          {groupMembers.length === 0 ? (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              minHeight: 200,
+              textAlign: 'center'
+            }}>
+              <GroupIcon sx={{ fontSize: 48, color: theme.palette.text.secondary, mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">
+                No members found
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                This group doesn't have any members yet.
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Worker Name</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Employee ID</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {groupMembers.map((member, index) => (
+                    <TableRow key={member.id || index}>
+                      <TableCell>{member.workerName || member.fullName || 'N/A'}</TableCell>
+                      <TableCell>{member.employeeId || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={member.isActive !== false ? 'Active' : 'Inactive'} 
+                          color={member.isActive !== false ? 'success' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <Button onClick={() => setShowMembersDialog(false)} color="inherit">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

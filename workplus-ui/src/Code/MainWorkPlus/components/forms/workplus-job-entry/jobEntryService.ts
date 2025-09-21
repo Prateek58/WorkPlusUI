@@ -15,6 +15,7 @@ export interface Worker {
 export interface Job {
   jobId: number;
   jobName: string;
+  jobTypeName?: string;
   ratePerItem: number | null;
   ratePerHour: number | null;
   expectedHours: number | null;
@@ -299,4 +300,4 @@ const jobEntryService = {
   getWorkers
 };
 
-export default jobEntryService; 
+export default jobEntryService;

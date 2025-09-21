@@ -24,16 +24,30 @@ import {
   Tooltip,
   Autocomplete,
   useTheme,
-  TablePagination
+  TablePagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Chip,
+  Card
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import GroupIcon from '@mui/icons-material/Group';
+import CloseIcon from '@mui/icons-material/Close';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SpeedIcon from '@mui/icons-material/Speed';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import WarningIcon from '@mui/icons-material/Warning';
 import dayjs from 'dayjs';
 import jobEntryService from './jobEntryService';
 import type { Worker, Job, JobGroup, JobEntryResponse } from './jobEntryService';
+import { useGroupMemberService } from '../../masters/group-member/groupMemberService';
 import { 
   formContainerStyles, 
   sectionTitleStyles, 
@@ -69,6 +83,7 @@ interface FormData {
 const WorkPlusJobEntryForm: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { getGroupMembersByGroup } = useGroupMemberService();
   
   // State for form data
   const [formData, setFormData] = useState<FormData>({
@@ -110,6 +125,11 @@ const WorkPlusJobEntryForm: React.FC = () => {
   const [workerInputValue, setWorkerInputValue] = useState('');
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [autocompleteKey, setAutocompleteKey] = useState(0);
+  
+  // Group members dialog states
+  const [showMembersDialog, setShowMembersDialog] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
 
   // Fetch master data and saved records on component mount
   useEffect(() => {
@@ -355,6 +375,12 @@ const WorkPlusJobEntryForm: React.FC = () => {
           penaltyRate: ''
         });
         
+        // Reset worker autocomplete states
+        setSelectedWorker(null);
+        setWorkerInputValue('');
+        setAutocompleteKey(prev => prev + 1); // Force re-render of autocomplete
+        setSelectedJob(null);
+        
         setSuccess('Work record saved successfully!');
       } catch (err) {
         console.error('Error response from API:', err);
@@ -399,6 +425,24 @@ const WorkPlusJobEntryForm: React.FC = () => {
       setWorkers(response);
     } catch (error) {
       console.error('Error fetching workers:', error);
+    }
+  };
+
+  // Handle show members for selected group
+  const handleShowMembers = async () => {
+    if (formData.groupId && typeof formData.groupId === 'number') {
+      setLoadingMembers(true);
+      try {
+        const members = await getGroupMembersByGroup(formData.groupId);
+        setGroupMembers(members);
+        setShowMembersDialog(true);
+      } catch (error) {
+        console.error('Error fetching group members:', error);
+        setGroupMembers([]);
+        setShowMembersDialog(true);
+      } finally {
+        setLoadingMembers(false);
+      }
     }
   };
 
@@ -469,20 +513,44 @@ const WorkPlusJobEntryForm: React.FC = () => {
               >
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
-                    <ToggleButtonGroup
-                      value={formData.entryType}
-                      exclusive
-                      onChange={handleEntryTypeChange}
-                      aria-label="entry type"
-                      sx={{ mb: 3 }}
-                    >
-                      <ToggleButton value="Individual" aria-label="individual">
-                        Individual
-                      </ToggleButton>
-                      <ToggleButton value="Group" aria-label="group">
-                        Group
-                      </ToggleButton>
-                    </ToggleButtonGroup>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      mb: 3,
+                      flexWrap: 'wrap',
+                      gap: 2
+                    }}>
+                      <ToggleButtonGroup
+                        value={formData.entryType}
+                        exclusive
+                        onChange={handleEntryTypeChange}
+                        aria-label="entry type"
+                      >
+                        <ToggleButton value="Individual" aria-label="individual">
+                          Individual
+                        </ToggleButton>
+                        <ToggleButton value="Group" aria-label="group">
+                          Group
+                        </ToggleButton>
+                      </ToggleButtonGroup>
+                      
+                      <FormControl sx={{ minWidth: 120 }}>
+                        <InputLabel id="shift-select-label">Shift</InputLabel>
+                        <Select
+                          labelId="shift-select-label"
+                          id="shift-select"
+                          value={formData.shift}
+                          label="Shift"
+                          onChange={(e) => handleInputChange('shift', e.target.value)}
+                          sx={formFieldStyles(theme)}
+                        >
+                          <MenuItem value="Morning">Morning</MenuItem>
+                          <MenuItem value="Afternoon">Afternoon</MenuItem>
+                          <MenuItem value="Evening">Evening</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
                   </Grid>
 
                   <Grid item xs={12}>
@@ -547,23 +615,50 @@ const WorkPlusJobEntryForm: React.FC = () => {
                     </Grid>
                   ) : (
                     <Grid item xs={12}>
-                      <FormControl fullWidth>
-                        <InputLabel id="group-select-label">Select Group</InputLabel>
-                        <Select
-                          labelId="group-select-label"
-                          id="group-select"
-                          value={formData.groupId}
-                          label="Select Group"
-                          onChange={(e) => handleInputChange('groupId', e.target.value)}
-                          sx={formFieldStyles(theme)}
-                        >
-                          {jobGroups.map((group) => (
-                            <MenuItem key={group.groupId} value={group.groupId}>
-                              {group.groupName}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        <FormControl sx={{ flex: 1 }}>
+                          <InputLabel id="group-select-label">Select Group</InputLabel>
+                          <Select
+                            labelId="group-select-label"
+                            id="group-select"
+                            value={formData.groupId}
+                            label="Select Group"
+                            onChange={(e) => handleInputChange('groupId', e.target.value)}
+                            sx={formFieldStyles(theme)}
+                          >
+                            {jobGroups.map((group) => (
+                              <MenuItem key={group.groupId} value={group.groupId}>
+                                {group.groupName}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        
+                        {formData.groupId && (
+                          <Button
+                            variant="text"
+                            startIcon={<GroupIcon />}
+                            onClick={handleShowMembers}
+                            disabled={loadingMembers}
+                            size="small"
+                            sx={{ 
+                              minWidth: 'auto',
+                              whiteSpace: 'nowrap',
+                              textTransform: 'none',
+                              fontSize: '0.875rem',
+                              color: 'primary.main',
+                              height: '56px',
+                              px: 2,
+                              '&:hover': {
+                                backgroundColor: 'transparent',
+                                textDecoration: 'underline'
+                              }
+                            }}
+                          >
+                            {loadingMembers ? 'Loading members...' : 'View group members'}
+                          </Button>
+                        )}
+                      </Box>
                     </Grid>
                   )}
 
@@ -580,14 +675,14 @@ const WorkPlusJobEntryForm: React.FC = () => {
                       >
                         {jobs.map((job) => (
                           <MenuItem key={job.jobId} value={job.jobId}>
-                            {job.jobName}
+                            {job.jobName}{job.jobTypeName ? ` (${job.jobTypeName})` : ''}
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={8}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label={selectedJob?.ratePerHour ? "Hours Taken" : "Items Completed"}
@@ -596,24 +691,6 @@ const WorkPlusJobEntryForm: React.FC = () => {
                       onChange={(e) => handleInputChange('actualOutput', e.target.value)}
                       sx={formFieldStyles(theme)}
                     />
-                  </Grid>
-
-                  <Grid item xs={4}>
-                    <FormControl fullWidth>
-                      <InputLabel id="shift-select-label">Shift</InputLabel>
-                      <Select
-                        labelId="shift-select-label"
-                        id="shift-select"
-                        value={formData.shift}
-                        label="Shift"
-                        onChange={(e) => handleInputChange('shift', e.target.value)}
-                        sx={formFieldStyles(theme)}
-                      >
-                        <MenuItem value="Morning">Morning</MenuItem>
-                        <MenuItem value="Afternoon">Afternoon</MenuItem>
-                        <MenuItem value="Evening">Evening</MenuItem>
-                      </Select>
-                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12}>
@@ -691,118 +768,210 @@ const WorkPlusJobEntryForm: React.FC = () => {
                 <Typography 
                   variant="h6" 
                   sx={{ 
-                    mb: 1.5, 
+                    mb: 2, 
                     position: 'sticky', 
                     top: 0, 
                     pb: 1, 
                     zIndex: 1,
-                    color: theme.palette.text.primary
+                    color: theme.palette.text.primary,
+                    fontWeight: 600
                   }}
                 >
                   Job Details
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={1.5}>
                   {selectedJob?.ratePerItem && (
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0}
+                    <Grid item xs={6}>
+                      <Card 
+                        elevation={2}
                         sx={{ 
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.divider}`,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                          height: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.primary.main}05)`,
+                          border: `1px solid ${theme.palette.primary.main}30`,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
                       >
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>Rate per Item</Typography>
-                        <Typography variant="body1">{selectedJob.ratePerItem}</Typography>
-                      </Paper>
+                        <AttachMoneyIcon sx={{ fontSize: 20, color: 'primary.main', mb: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          Rate per Item
+                        </Typography>
+                        <Typography variant="h6" color="primary.main" sx={{ fontWeight: 700 }}>
+                          ₹{selectedJob.ratePerItem}
+                        </Typography>
+                      </Card>
                     </Grid>
                   )}
                   
                   {selectedJob?.ratePerHour && (
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0}
+                    <Grid item xs={6}>
+                      <Card 
+                        elevation={2}
                         sx={{ 
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.divider}`,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                          height: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.success.main}15, ${theme.palette.success.main}05)`,
+                          border: `1px solid ${theme.palette.success.main}30`,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
                       >
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>Rate per Hour</Typography>
-                        <Typography variant="body1">{selectedJob.ratePerHour}</Typography>
-                      </Paper>
+                        <AttachMoneyIcon sx={{ fontSize: 20, color: 'success.main', mb: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          Rate per Hour
+                        </Typography>
+                        <Typography variant="h6" color="success.main" sx={{ fontWeight: 700 }}>
+                          ₹{selectedJob.ratePerHour}
+                        </Typography>
+                      </Card>
                     </Grid>
                   )}
                   
                   {selectedJob?.expectedHours && (
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0}
+                    <Grid item xs={6}>
+                      <Card 
+                        elevation={2}
                         sx={{ 
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.divider}`,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                          height: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.info.main}15, ${theme.palette.info.main}05)`,
+                          border: `1px solid ${theme.palette.info.main}30`,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
                       >
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>Expected Hours</Typography>
-                        <Typography variant="body1">{selectedJob.expectedHours}</Typography>
-                      </Paper>
+                        <AccessTimeIcon sx={{ fontSize: 20, color: 'info.main', mb: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          Expected Hours
+                        </Typography>
+                        <Typography variant="h6" color="info.main" sx={{ fontWeight: 700 }}>
+                          {selectedJob.expectedHours}h
+                        </Typography>
+                      </Card>
                     </Grid>
                   )}
                   
                   {selectedJob?.expectedItemsPerHour && (
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0}
+                    <Grid item xs={6}>
+                      <Card 
+                        elevation={2}
                         sx={{ 
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.divider}`,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                          height: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.warning.main}15, ${theme.palette.warning.main}05)`,
+                          border: `1px solid ${theme.palette.warning.main}30`,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
                       >
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>Expected Items per Hour</Typography>
-                        <Typography variant="body1">{selectedJob.expectedItemsPerHour}</Typography>
-                      </Paper>
+                        <SpeedIcon sx={{ fontSize: 20, color: 'warning.main', mb: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          Items/Hour
+                        </Typography>
+                        <Typography variant="h6" color="warning.main" sx={{ fontWeight: 700 }}>
+                          {selectedJob.expectedItemsPerHour}
+                        </Typography>
+                      </Card>
                     </Grid>
                   )}
                   
                   {selectedJob?.incentiveBonusRate && (
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0}
+                    <Grid item xs={6}>
+                      <Card 
+                        elevation={2}
                         sx={{ 
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.divider}`,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                          height: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}15, ${theme.palette.secondary.main}05)`,
+                          border: `1px solid ${theme.palette.secondary.main}30`,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
                       >
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>Incentive Bonus Rate</Typography>
-                        <Typography variant="body1">
-                          {selectedJob.incentiveBonusRate} ({selectedJob.incentiveType || 'N/A'})
+                        <EmojiEventsIcon sx={{ fontSize: 20, color: 'secondary.main', mb: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          Incentive Bonus
                         </Typography>
-                      </Paper>
+                        <Typography variant="body2" color="secondary.main" sx={{ fontWeight: 600 }}>
+                          {selectedJob.incentiveBonusRate}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ({selectedJob.incentiveType || 'N/A'})
+                        </Typography>
+                      </Card>
                     </Grid>
                   )}
                   
                   {selectedJob?.penaltyRate && (
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0}
+                    <Grid item xs={6}>
+                      <Card 
+                        elevation={2}
                         sx={{ 
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.divider}`,
-                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                          height: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          textAlign: 'center',
+                          borderRadius: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.error.main}15, ${theme.palette.error.main}05)`,
+                          border: `1px solid ${theme.palette.error.main}30`,
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4],
+                          }
                         }}
                       >
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>Penalty Rate</Typography>
-                        <Typography variant="body1">{selectedJob.penaltyRate}</Typography>
-                      </Paper>
+                        <WarningIcon sx={{ fontSize: 20, color: 'error.main', mb: 0.5 }} />
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 0.5 }}>
+                          Penalty Rate
+                        </Typography>
+                        <Typography variant="h6" color="error.main" sx={{ fontWeight: 700 }}>
+                          {selectedJob.penaltyRate}
+                        </Typography>
+                      </Card>
                     </Grid>
                   )}
                 </Grid>
@@ -918,6 +1087,42 @@ const WorkPlusJobEntryForm: React.FC = () => {
           )}
         </Paper>
       </Box>
+      
+      {/* Group Members Dialog */}
+      <Dialog
+        open={showMembersDialog}
+        onClose={() => setShowMembersDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Group Members</Typography>
+          <IconButton onClick={() => setShowMembersDialog(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          {groupMembers.length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+              {groupMembers.map((member) => (
+                <Chip
+                  key={member.id}
+                  label={member.workerName}
+                  variant="outlined"
+                  color="primary"
+                />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+              No members found in this group.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowMembersDialog(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </DashboardLayout>
   );
 };
