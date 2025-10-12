@@ -1,34 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
-  Box,
-  Typography,
-  Alert,
-  Checkbox,
-  FormControlLabel,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Paper,
-  Autocomplete,
-  Chip,
-  IconButton,
-} from '@mui/material';
+  import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Grid,
+    Box,
+    Typography,
+    Alert,
+    Checkbox,
+    FormControlLabel,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemIcon,
+    Paper,
+    Autocomplete,
+    Chip,
+    IconButton,
+    Tabs,
+    Tab,
+  } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Refresh as RefreshIcon } from '@mui/icons-material';
+import { Refresh as RefreshIcon, Edit as EditIcon } from '@mui/icons-material';
 import dayjs, { Dayjs } from 'dayjs';
-import { useHRService, BulkAttendance, Worker } from '../../services/hrService';
+import { useHRService, BulkAttendance, Worker, AttendanceRecord } from '../../services/hrService';
+import AttendanceForm from './AttendanceForm';
 
 interface BulkAttendanceFormProps {
   open: boolean;
@@ -53,6 +56,10 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [dateValidationWarning, setDateValidationWarning] = useState<string>('');
   const [canOverrideDate, setCanOverrideDate] = useState<boolean>(false);
+  const [attendanceMap, setAttendanceMap] = useState<Record<number, AttendanceRecord | undefined>>({});
+  const [editFormOpen, setEditFormOpen] = useState<boolean>(false);
+  const [editRecord, setEditRecord] = useState<AttendanceRecord | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     if (open) {
@@ -69,6 +76,22 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
       validateAttendanceDate();
     }
   }, [attendanceDate]);
+
+  // Load attendance records for the selected date to enable sorting and edit actions
+  useEffect(() => {
+    const loadAttendanceForDate = async () => {
+      if (!attendanceDate) return;
+      try {
+        const records = await hrService.getAttendance(attendanceDate.format('YYYY-MM-DD'));
+        const map: Record<number, AttendanceRecord> = {};
+        records.forEach(r => { map[r.workerId] = r; });
+        setAttendanceMap(map);
+      } catch (error) {
+        console.error('Error loading attendance for date:', error);
+      }
+    };
+    loadAttendanceForDate();
+  }, [attendanceDate, open]);
 
   const loadWorkers = async () => {
     try {
@@ -88,6 +111,7 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
     setRemarks('');
     setError('');
     setSelectAll(false);
+    setAttendanceMap({});
   };
 
   const handleWorkerToggle = (workerId: number) => {
@@ -157,6 +181,13 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
       } else {
         onSuccess();
         onClose();
+        // Refresh attendance map after successful bulk mark
+        if (attendanceDate) {
+          const records = await hrService.getAttendance(attendanceDate.format('YYYY-MM-DD'));
+          const map: Record<number, AttendanceRecord> = {};
+          records.forEach(r => { map[r.workerId] = r; });
+          setAttendanceMap(map);
+        }
       }
     } catch (error: any) {
       console.error('Error marking bulk attendance:', error);
@@ -187,7 +218,80 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
     }
   };
 
+  const getStatusPriority = (workerId: number) => {
+    const rec = attendanceMap[workerId];
+    const status = rec?.status?.toLowerCase();
+    if (status === 'present') return 0;
+    if (status === 'absent') return 1;
+    if (status === 'half day') return 2;
+    return 3; // unmarked or other statuses
+  };
+
+  const getStatusLabelAndColor = (workerId: number): { label: string; color: 'success'|'error'|'warning'|'default' } => {
+    const rec = attendanceMap[workerId];
+    if (!rec) return { label: 'Unmarked', color: 'default' };
+    const status = rec.status;
+    if (status === 'Present') return { label: 'Present', color: 'success' };
+    if (status === 'Absent') return { label: 'Absent', color: 'error' };
+    if (status === 'Half Day') {
+      const suffix = rec.halfDayType ? ` - ${rec.halfDayType}` : '';
+      return { label: `Half Day${suffix}` , color: 'warning' };
+    }
+    return { label: status, color: 'default' };
+  };
+
+  const sortedWorkers = [...workers].sort((a, b) => {
+    const prioDiff = getStatusPriority(a.workerId) - getStatusPriority(b.workerId);
+    if (prioDiff !== 0) return prioDiff;
+    return a.fullName.localeCompare(b.fullName);
+  });
+
+  const filteredWorkers = sortedWorkers.filter((worker) => {
+    const rec = attendanceMap[worker.workerId];
+    switch (statusFilter) {
+      case 'present':
+        return rec?.status === 'Present';
+      case 'absent':
+        return rec?.status === 'Absent';
+      case 'firstHalf':
+        return rec?.status === 'Half Day' && rec?.halfDayType === 'First Half';
+      case 'secondHalf':
+        return rec?.status === 'Half Day' && rec?.halfDayType === 'Second Half';
+      case 'unmarked':
+        return !rec;
+      default:
+        return true; // 'all'
+    }
+  });
+
+  const handleEditClick = (workerId: number) => {
+    const rec = attendanceMap[workerId];
+    if (rec) {
+      setEditRecord(rec);
+      setEditFormOpen(true);
+    }
+  };
+
+  const handleEditClose = () => {
+    setEditFormOpen(false);
+    setEditRecord(null);
+  };
+
+  const handleEditSuccess = async () => {
+    // Refresh the attendance map to reflect edits
+    if (attendanceDate) {
+      const records = await hrService.getAttendance(attendanceDate.format('YYYY-MM-DD'));
+      const map: Record<number, AttendanceRecord> = {};
+      records.forEach(r => { map[r.workerId] = r; });
+      setAttendanceMap(map);
+    }
+    setEditFormOpen(false);
+    setEditRecord(null);
+    onSuccess();
+  };
+
   return (
+    <>
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>
         Mark Bulk Attendance
@@ -310,13 +414,43 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
                 label="Select All Workers"
               />
 
+              <Box sx={{ mt: 1, mb: 1 }}>
+                <Tabs
+                  value={statusFilter}
+                  onChange={(_, v) => setStatusFilter(v)}
+                  variant="scrollable"
+                  scrollButtons
+                  allowScrollButtonsMobile
+                >
+                  <Tab label="All" value="all" />
+                  <Tab label="Present" value="present" />
+                  <Tab label="Absent" value="absent" />
+                  <Tab label="First Half" value="firstHalf" />
+                  <Tab label="Second Half" value="secondHalf" />
+                  <Tab label="Unmarked" value="unmarked" />
+                </Tabs>
+              </Box>
+
               <Paper sx={{ maxHeight: 300, overflow: 'auto', mt: 1 }}>
                 <List dense>
-                  {workers.map((worker) => (
+                  {filteredWorkers.map((worker) => (
                     <ListItem
                       key={worker.workerId}
                       button
                       onClick={() => handleWorkerToggle(worker.workerId)}
+                      sx={(theme) => {
+                        const { color } = getStatusLabelAndColor(worker.workerId);
+                        const paletteColor = 
+                          color === 'success' ? theme.palette.success.main :
+                          color === 'error' ? theme.palette.error.main :
+                          color === 'warning' ? theme.palette.warning.main :
+                          theme.palette.grey[500];
+                        return {
+                          borderLeft: `4px solid ${paletteColor}`,
+                          bgcolor: `${paletteColor}15`,
+                          '&:hover': { bgcolor: `${paletteColor}25` }
+                        };
+                      }}
                     >
                       <ListItemIcon>
                         <Checkbox
@@ -334,6 +468,22 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
                           </>
                         }
                       />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip 
+                          size="small"
+                          label={getStatusLabelAndColor(worker.workerId).label}
+                          color={getStatusLabelAndColor(worker.workerId).color as any}
+                          variant={getStatusLabelAndColor(worker.workerId).color === 'default' ? 'outlined' : 'filled'}
+                        />
+                        <IconButton 
+                          size="small" 
+                          onClick={(e) => { e.stopPropagation(); handleEditClick(worker.workerId); }}
+                          disabled={!attendanceMap[worker.workerId]}
+                          title={attendanceMap[worker.workerId] ? 'Edit attendance' : 'Not marked yet'}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </ListItem>
                   ))}
                 </List>
@@ -353,7 +503,14 @@ const BulkAttendanceForm: React.FC<BulkAttendanceFormProps> = ({
         </Button>
       </DialogActions>
     </Dialog>
+    <AttendanceForm 
+      open={editFormOpen}
+      onClose={handleEditClose}
+      onSuccess={handleEditSuccess}
+      editRecord={editRecord}
+    />
+    </>
   );
 };
 
-export default BulkAttendanceForm; 
+export default BulkAttendanceForm;
