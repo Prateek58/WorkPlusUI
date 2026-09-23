@@ -49,23 +49,13 @@ import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../Common/config';
 
-// Configure axios defaults
-axios.defaults.baseURL = API_URL.replace('/api', '');
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+// Configure axios defaults - REMOVED to prevent global pollution
+// axios.defaults.baseURL = API_URL.replace('/api', '');
+// axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-// Add axios interceptor to handle CORS and JWT
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Add axios interceptor to handle CORS and JWT - REMOVED
+// Handled by api.ts service
+
 
 interface JobWorkFilter {
   startDate: dayjs.Dayjs | null;
@@ -163,6 +153,15 @@ const JobWork = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [jobWorks, setJobWorks] = useState<any[]>([]);
+  const toNum = (v: any) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const f2 = (v: any) => toNum(v).toFixed(2);
+  const fmtDate = (v: any) => {
+    const d = dayjs(v);
+    return d.isValid() ? d.format('DD/MM/YYYY') : '-';
+  };
 
   // Memoize footer calculations to improve performance
   const footerTotals = useMemo(() => {
@@ -176,14 +175,14 @@ const JobWork = () => {
       };
     }
 
-    const totalHours = jobWorks.reduce((sum, job) => sum + (job.qtyHours || 0), 0);
-    const totalItems = jobWorks.reduce((sum, job) => sum + (job.qtyItems || 0), 0);
-    const totalAmount = jobWorks.reduce((sum, job) => sum + (job.totalAmount || 0), 0);
+    const totalHours = jobWorks.reduce((sum, job) => sum + toNum(job.qtyHours), 0);
+    const totalItems = jobWorks.reduce((sum, job) => sum + toNum(job.qtyItems), 0);
+    const totalAmount = jobWorks.reduce((sum, job) => sum + toNum(job.totalAmount), 0);
     const totalRecords = jobWorks.length;
     
-    const validJobs = jobWorks.filter(job => job.rateForJob && job.rateForJob > 0);
+    const validJobs = jobWorks.filter(job => toNum(job.rateForJob) > 0);
     const avgRate = validJobs.length > 0 
-      ? validJobs.reduce((sum, job) => sum + (job.rateForJob || 0), 0) / validJobs.length
+      ? validJobs.reduce((sum, job) => sum + toNum(job.rateForJob), 0) / validJobs.length
       : 0;
 
     return {
@@ -255,18 +254,18 @@ const JobWork = () => {
         return;
       }
 
-      const [unitsRes, typesRes, jobsRes] = await Promise.all([
-        axios.get('/api/JobWork/units'),
-        axios.get('/api/JobWork/job-work-types'),
-        axios.get(`/api/JobWork/jobs?isGroup=${filters.jobType === 'group'}`),
+      const [unitsData, typesData, jobsData] = await Promise.all([
+        jobWorkService.getUnits(),
+        jobWorkService.getJobWorkTypes(),
+        jobWorkService.getJobs(filters.jobType === 'group'),
       ]);
 
-      console.log('API Responses:', { units: unitsRes.data, types: typesRes.data, jobs: jobsRes.data });
+      console.log('API Responses:', { units: unitsData, types: typesData, jobs: jobsData });
 
       // Ensure the responses are arrays
-      setUnits(Array.isArray(unitsRes.data) ? unitsRes.data : []);
-      setJobWorkTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
-      setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
+      setUnits(Array.isArray(unitsData) ? unitsData : []);
+      setJobWorkTypes(Array.isArray(typesData) ? typesData : []);
+      setJobs(Array.isArray(jobsData) ? jobsData : []);
     } catch (error) {
       console.error('Error fetching initial data:', error);
       if (axios.isAxiosError(error)) {
@@ -328,8 +327,8 @@ const JobWork = () => {
 
   const fetchJobs = async (jobType: 'work' | 'group') => {
     try {
-      const response = await axios.get(`/api/JobWork/jobs?isGroup=${jobType === 'group'}`);
-      setJobs(response.data);
+      const data = await jobWorkService.getJobs(jobType === 'group');
+      setJobs(data);
     } catch (error) {
       console.error('Error fetching jobs:', error);
     }
@@ -382,14 +381,7 @@ const JobWork = () => {
 
       console.log('Sending summary request with params:', params);
 
-      const response = await axios.get('/api/JobWork/export/summary', {
-        params,
-        responseType: 'blob',
-        headers: {
-          'Accept': 'application/pdf',
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await jobWorkService.exportSummary(params);
 
       console.log('Response received:', response);
 
@@ -489,14 +481,7 @@ const JobWork = () => {
 
       console.log(`Sending ${type} export request with params:`, params);
 
-      const response = await axios.get(`/api/JobWork/export/${type}`, {
-        params,
-        responseType: 'blob',
-        headers: {
-          'Accept': type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await jobWorkService.exportData(type, params);
 
       console.log('Response received:', response);
 
@@ -623,8 +608,8 @@ const JobWork = () => {
 
   const fetchEmployees = async (searchTerm: string) => {
     try {
-      const response = await axios.get(`/api/JobWork/employees?search=${searchTerm}`);
-      setEmployees(response.data);
+      const data = await jobWorkService.getEmployees(searchTerm);
+      setEmployees(data);
     } catch (error) {
       console.error('Error fetching employees:', error);
     }
@@ -1244,14 +1229,14 @@ const JobWork = () => {
                   jobWorks.map((jobWork) => (
                     <TableRow key={jobWork.entryId}>
                       <TableCell>{jobWork.unitName}</TableCell>
-                      <TableCell>{dayjs(jobWork.entryDate).format('DD/MM/YYYY')}</TableCell>
+                      <TableCell>{fmtDate(jobWork.entryDate)}</TableCell>
                       <TableCell>{jobWork.workType}</TableCell>
                       <TableCell>{jobWork.workName}</TableCell>
-                      <TableCell align="right">{jobWork.qtyHours}</TableCell>
-                      <TableCell align="right">₹{(jobWork.rateForJob * 8)?.toFixed(2)}</TableCell>
-                      <TableCell align="right">₹{jobWork.rateForJob?.toFixed(2)}</TableCell>
-                      <TableCell align="right">{jobWork.qtyItems}</TableCell>
-                      <TableCell align="right">₹{jobWork.totalAmount?.toFixed(2)}</TableCell>
+                      <TableCell align="right">{f2(jobWork.qtyHours)}</TableCell>
+                      <TableCell align="right">₹{f2(toNum(jobWork.rateForJob) * 8)}</TableCell>
+                      <TableCell align="right">₹{f2(jobWork.rateForJob)}</TableCell>
+                      <TableCell align="right">{f2(jobWork.qtyItems)}</TableCell>
+                      <TableCell align="right">₹{f2(jobWork.totalAmount)}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -1298,7 +1283,7 @@ const JobWork = () => {
                       Hours
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {footerTotals.totalHours.toFixed(2)}
+                      {f2(footerTotals.totalHours)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1313,7 +1298,7 @@ const JobWork = () => {
                       Avg Rate
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{footerTotals.avgRate.toFixed(2)}
+                      ₹{f2(footerTotals.avgRate)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1328,7 +1313,7 @@ const JobWork = () => {
                       Items
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {footerTotals.totalItems}
+                      {f2(footerTotals.totalItems)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1343,7 +1328,7 @@ const JobWork = () => {
                       Total Amount
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{footerTotals.totalAmount.toFixed(2)}
+                      ₹{f2(footerTotals.totalAmount)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1358,7 +1343,7 @@ const JobWork = () => {
                       Rate*8
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{(footerTotals.avgRate * 8).toFixed(2)}
+                      ₹{f2(toNum(footerTotals.avgRate) * 8)}
                     </Typography>
                   </Box>
                 </Grid>

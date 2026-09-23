@@ -46,23 +46,13 @@ import { getTableHeaderStyle } from '../../../theme/tableStyles';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../../Common/config';
 
-// Configure axios defaults
-axios.defaults.baseURL = API_URL.replace('/api', '');
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+// Configure axios defaults - REMOVED to prevent global pollution
+// axios.defaults.baseURL = API_URL.replace('/api', '');
+// axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-// Add axios interceptor to handle CORS and JWT
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Add axios interceptor to handle CORS and JWT - REMOVED
+// Handled by api.ts service
+
 
 interface LRFilter {
   startDate: dayjs.Dayjs | null;
@@ -199,6 +189,15 @@ const LorryReceipt = () => {
   ]);
 
   const theme = useTheme();
+  const toNum = (v: any) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const f2 = (v: any) => toNum(v).toFixed(2);
+  const fmtDate = (v: any) => {
+    const d = dayjs(v);
+    return d.isValid() ? d.format('DD/MM/YYYY') : '-';
+  };
 
   // Memoize footer calculations to improve performance
   const footerTotals = useMemo(() => {
@@ -214,16 +213,16 @@ const LorryReceipt = () => {
       };
     }
 
-    const totalWeight = lrEntries.reduce((sum, entry) => sum + (entry.lrWeight || 0), 0);
-    const totalLrQty = lrEntries.reduce((sum, entry) => sum + (entry.lrQty || 0), 0);
-    const totalLrAmount = lrEntries.reduce((sum, entry) => sum + (entry.lrAmount || 0), 0);
-    const totalFreight = lrEntries.reduce((sum, entry) => sum + (entry.freight || 0), 0);
-    const totalQty = lrEntries.reduce((sum, entry) => sum + (entry.totalQty || 0), 0);
+    const totalWeight = lrEntries.reduce((sum, entry) => sum + toNum(entry.lrWeight), 0);
+    const totalLrQty = lrEntries.reduce((sum, entry) => sum + toNum(entry.lrQty), 0);
+    const totalLrAmount = lrEntries.reduce((sum, entry) => sum + toNum(entry.lrAmount), 0);
+    const totalFreight = lrEntries.reduce((sum, entry) => sum + toNum(entry.freight), 0);
+    const totalQty = lrEntries.reduce((sum, entry) => sum + toNum(entry.totalQty), 0);
     const totalTrucks = lrEntries.filter(entry => entry.truckNo && entry.truckNo.trim()).length;
     
-    const validEntries = lrEntries.filter(entry => entry.ratePerQtl && entry.ratePerQtl > 0);
+    const validEntries = lrEntries.filter(entry => toNum(entry.ratePerQtl) > 0);
     const avgRate = validEntries.length > 0 
-      ? validEntries.reduce((sum, entry) => sum + (entry.ratePerQtl || 0), 0) / validEntries.length
+      ? validEntries.reduce((sum, entry) => sum + toNum(entry.ratePerQtl), 0) / validEntries.length
       : 0;
 
     return {
@@ -293,30 +292,30 @@ const LorryReceipt = () => {
       
       // Fetch data with individual error handling to prevent one failed request from breaking all
       const promises = [
-        axios.get('/api/Archive/LR/units').catch(err => {
+        lrService.getUnits().catch(err => {
           console.error('Failed to load units:', err);
-          return { data: [] };
+          return [];
         }),
-        axios.get('/api/Archive/LR/parties').catch(err => {
+        lrService.getParties().catch(err => {
           console.error('Failed to load parties:', err);
-          return { data: [] };
+          return [];
         }),
-        axios.get('/api/Archive/LR/transporters').catch(err => {
+        lrService.getTransporters().catch(err => {
           console.error('Failed to load transporters:', err);
-          return { data: [] };
+          return [];
         }),
-        axios.get('/api/Archive/LR/cities').catch(err => {
+        lrService.getCities().catch(err => {
           console.error('Failed to load cities:', err);
-          return { data: [] };
+          return [];
         }),
       ];
 
-      const [unitsResponse, partiesResponse, transportersResponse, citiesResponse] = await Promise.all(promises);
+      const [unitsData, partiesData, transportersData, citiesData] = await Promise.all(promises);
 
-      setUnits(unitsResponse.data);
-      setParties(partiesResponse.data);
-      setTransporters(transportersResponse.data);
-      setCities(citiesResponse.data);
+      setUnits(unitsData);
+      setParties(partiesData);
+      setTransporters(transportersData);
+      setCities(citiesData);
       
       console.log('Initial data loaded successfully');
     } catch (error) {
@@ -409,10 +408,8 @@ const LorryReceipt = () => {
     try {
       setPartySearchLoading(true);
       console.log('Searching parties for:', searchTerm);
-      const response = await axios.get('/api/Archive/LR/parties/search', {
-        params: { search: searchTerm }
-      });
-      setParties(response.data);
+      const data = await lrService.searchParties(searchTerm);
+      setParties(data);
     } catch (error) {
       console.error('Error fetching parties:', error);
       // Don't update parties on error to keep existing data
@@ -1033,19 +1030,19 @@ const LorryReceipt = () => {
                   lrEntries.map((entry) => (
                     <TableRow key={entry.entryId}>
                       <TableCell>{entry.unitName}</TableCell>
-                      <TableCell>{entry.billDate ? dayjs(entry.billDate).format('DD/MM/YYYY') : '-'}</TableCell>
+                      <TableCell>{fmtDate(entry.billDate)}</TableCell>
                       <TableCell>{entry.billNo}</TableCell>
                       <TableCell>{entry.partyName}</TableCell>
                       <TableCell>{entry.cityName}</TableCell>
                       <TableCell>{entry.transporterName}</TableCell>
                       <TableCell>{entry.lrNo}</TableCell>
-                      <TableCell>{entry.lrDate ? dayjs(entry.lrDate).format('DD/MM/YYYY') : '-'}</TableCell>
-                      <TableCell align="right">{entry.lrWeight?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell align="right">{entry.ratePerQtl?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell align="right">{entry.lrQty?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell align="right">₹{entry.lrAmount?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell align="right">₹{entry.freight?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell align="right">{entry.totalQty?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>{fmtDate(entry.lrDate)}</TableCell>
+                      <TableCell align="right">{f2(entry.lrWeight)}</TableCell>
+                      <TableCell align="right">{f2(entry.ratePerQtl)}</TableCell>
+                      <TableCell align="right">{f2(entry.lrQty)}</TableCell>
+                      <TableCell align="right">₹{f2(entry.lrAmount)}</TableCell>
+                      <TableCell align="right">₹{f2(entry.freight)}</TableCell>
+                      <TableCell align="right">{f2(entry.totalQty)}</TableCell>
                       <TableCell>{entry.truckNo || '-'}</TableCell>
                     </TableRow>
                   ))
@@ -1092,7 +1089,7 @@ const LorryReceipt = () => {
                       Weight
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {footerTotals.totalWeight.toFixed(2)}
+                      {f2(footerTotals.totalWeight)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1107,7 +1104,7 @@ const LorryReceipt = () => {
                       Avg Rate
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {footerTotals.avgRate.toFixed(2)}
+                      {f2(footerTotals.avgRate)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1122,7 +1119,7 @@ const LorryReceipt = () => {
                       LR Qty
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {footerTotals.totalLrQty.toFixed(2)}
+                      {f2(footerTotals.totalLrQty)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1137,7 +1134,7 @@ const LorryReceipt = () => {
                       LR Amount
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{footerTotals.totalLrAmount.toFixed(2)}
+                      ₹{f2(footerTotals.totalLrAmount)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1152,7 +1149,7 @@ const LorryReceipt = () => {
                       Freight
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      ₹{footerTotals.totalFreight.toFixed(2)}
+                      ₹{f2(footerTotals.totalFreight)}
                     </Typography>
                   </Box>
                 </Grid>
@@ -1167,7 +1164,7 @@ const LorryReceipt = () => {
                       Total Qty
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      {footerTotals.totalQty.toFixed(2)}
+                      {f2(footerTotals.totalQty)}
                     </Typography>
                   </Box>
                 </Grid>

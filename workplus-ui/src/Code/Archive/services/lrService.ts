@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 import dayjs from 'dayjs';
 
 interface LRFilter {
@@ -42,7 +42,7 @@ const lrService = {
       startDate: filter.startDate?.format('YYYY-MM-DD'),
       endDate: filter.endDate?.format('YYYY-MM-DD'),
     };
-    const response = await axios.get('/api/Archive/LR/list', { params });
+    const response = await api.get('/api/Archive/LR/list', { params });
     return response.data;
   },
 
@@ -52,9 +52,34 @@ const lrService = {
       startDate: filter.startDate?.format('YYYY-MM-DD'),
       endDate: filter.endDate?.format('YYYY-MM-DD'),
     };
-    const response = await axios.get('/api/Archive/LR/summary', { params });
+    const response = await api.get('/api/Archive/LR/summary', { params });
+    return response.data;
+  },
+
+  getUnits: async () => {
+    const response = await api.get('/api/Archive/LR/units');
+    return response.data;
+  },
+
+  getParties: async () => {
+    const response = await api.get('/api/Archive/LR/parties');
+    return response.data;
+  },
+
+  getTransporters: async () => {
+    const response = await api.get('/api/Archive/LR/transporters');
+    return response.data;
+  },
+
+  getCities: async () => {
+    const response = await api.get('/api/Archive/LR/cities');
+    return response.data;
+  },
+
+  searchParties: async (search: string) => {
+    const response = await api.get('/api/Archive/LR/parties/search', { params: { search } });
     return response.data;
   }
 };
 
-export default lrService; 
+export default lrService;

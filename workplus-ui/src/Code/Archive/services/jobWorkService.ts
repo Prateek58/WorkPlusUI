@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 import dayjs from 'dayjs';
 
 interface JobWorkFilter {
@@ -38,7 +38,7 @@ const jobWorkService = {
       startDate: filter.startDate?.format('YYYY-MM-DD'),
       endDate: filter.endDate?.format('YYYY-MM-DD'),
     };
-    const response = await axios.get('/api/JobWork/list', { params });
+    const response = await api.get('/api/JobWork/list', { params });
     return response.data;
   },
 
@@ -48,9 +48,51 @@ const jobWorkService = {
       startDate: filter.startDate?.format('YYYY-MM-DD'),
       endDate: filter.endDate?.format('YYYY-MM-DD'),
     };
-    const response = await axios.get('/api/JobWork/summary', { params });
+    const response = await api.get('/api/JobWork/summary', { params });
     return response.data;
+  },
+
+  getUnits: async () => {
+    const response = await api.get('/api/JobWork/units');
+    return response.data;
+  },
+
+  getJobWorkTypes: async () => {
+    const response = await api.get('/api/JobWork/job-work-types');
+    return response.data;
+  },
+
+  getJobs: async (isGroup: boolean) => {
+    const response = await api.get('/api/JobWork/jobs', { params: { isGroup } });
+    return response.data;
+  },
+
+  getEmployees: async (search: string) => {
+    const response = await api.get('/api/JobWork/employees', { params: { search } });
+    return response.data;
+  },
+
+  exportSummary: async (params: any) => {
+    return api.get('/api/JobWork/export/summary', {
+        params,
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf',
+          'Content-Type': 'application/json'
+        }
+      });
+  },
+
+  exportData: async (type: string, params: any) => {
+      return api.get(`/api/JobWork/export/${type}`, {
+        params,
+        responseType: 'blob',
+        headers: {
+          'Accept': type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/json'
+        }
+      });
   }
 };
 
-export default jobWorkService; 
+export default jobWorkService;
