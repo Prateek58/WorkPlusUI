@@ -27,6 +27,7 @@ jobs:
             npm install
             npm run build
             
-            # Restart PM2 static file server pointing to dist folder with SPA routing support
-            pm2 restart layerbiz-workplus || pm2 serve dist 3000 --name "layerbiz-workplus" --spa
+            # Restart PM2 pointing directly to the workplus-ui/dist folder
+            pm2 delete layerbiz-workplus || true
+            pm2 serve dist 3000 --name "layerbiz-workplus" --spa
             pm2 save
